@@ -38,6 +38,9 @@ public:
       _ep(boost::asio::ip::address::from_string(ip), port),
       _acceptor(ioService, _ep)
   {
+    _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    _acceptor.set_option(boost::asio::ip::tcp::socket::keep_alive(true));
+    _acceptor.set_option(boost::asio::ip::tcp::no_delay(true));
     TcpConnPtr conn(new TcpConnection(ioService));
     listen(conn);
   }
