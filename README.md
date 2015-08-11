@@ -1,12 +1,11 @@
-Servers for game
-===============
+Server cluster for games
+========================
 
-my server project
+This is a project for game back-end. It will support tcp/udp
 
 License
 ===============
-rick <rick.han@yahoo.com>
-Copyright (c) <2015> <rick>
+Copyright (c) <2015-> <rick>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
