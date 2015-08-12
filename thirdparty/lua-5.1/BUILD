@@ -33,7 +33,10 @@ cc_library(
         'lvm.c',
         'lzio.c',
         'print.c',
-    ]
+    ],
+    incs = [
+        ".",
+    ],
 )
 
 cc_binary(

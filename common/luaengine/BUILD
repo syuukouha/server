@@ -8,7 +8,7 @@ cc_library(
         "//thirdparty/lua-5.1:lua",
     ],
     incs = [
-        "thirdparty/lua-5.1",
+        "../../thirdparty/lua-5.1/",
     ],
 )
 
@@ -19,5 +19,8 @@ cc_binary(
     ],
     deps = [
         ":luaengine",
+    ],
+    incs = [
+        "../../thirdparty/lua-5.1",
     ],
 )
