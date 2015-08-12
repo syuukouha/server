@@ -1,5 +1,5 @@
 /**
-FileName : LuaEngine.h
+FileName : TestLua.cpp
 Author   : rick <rick.han@yahoo.com>
 
 Copyright (c) <2015> <rick>
@@ -22,45 +22,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#ifndef __LUAENGINE__H__
-#define __LUAENGINE__H__
-#include "lua.hpp"
-#include <boost/noncopyable.hpp>
-#include "CCLuaValue.h"
-class LuaEngine : public boost::noncopyable
+#include "LuaEngine.h"
+
+int main(int argc, char** argv)
 {
-public:
-  static LuaEngine& instance()
-  {
-    static LuaEngine luaEngine;
-    return luaEngine;
-  }
-
-  lua_State* state() { return _L; }
-
-  // 添加路径
-  void addSearchPath(const char* path);
-
-  // 加载lua代码文件
-  void loadFile(const char* fileName);
-
-  // 注册c/c++库
-  void registLib(const char* libname, const luaL_Reg* lib);
-
-  // 调用lua函数
-  bool callLuaFunction(const char* methodName, LuaValueArray* input = nullptr, 
-                       LuaValueArray* output = nullptr);
-
-private:
-  LuaEngine() : _L(luaL_newstate())
-  {
-    luaL_openlibs(_L);
-  }
-
-private:
-  lua_State*    _L;
-};
-
-
-
-#endif // __LUAENGINE__H__
+  LuaEngine& ins = LuaEngine::instance();
+  ins.loadFile("main.lua");
+  ins.callLuaFunction("CalledByCpp");
+  return 0;
+}
