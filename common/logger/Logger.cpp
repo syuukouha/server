@@ -1,6 +1,7 @@
 /**
-main.cpp
-rick <rick.han@yahoo.com>
+FileName : Logger.cpp
+Author   : rick <rick.han@yahoo.com>
+
 Copyright (c) <2015> <rick>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,21 +22,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#include "main.h"
-#include "AsioCommon.h"
-#include "TcpServer.h"
+#include "gflags.h"
+#include "base/commandlineflags.h"
 #include "Logger.h"
-#include <string>
-#include <iostream>
-using namespace std;
 
-int main(int argc, char** argv) 
+void Logger::init(int* argc, char** argv)
 {
-  Logger::init(&argc, argv);
-  LOG(ERROR) << "TEST LOG";
-  IoService ioService;
-  string ip = "0.0.0.0";
-  TcpServer tcpServer(ioService, ip, 9999);
-  ioService.run();
-  return 0;
+  google::ParseCommandLineNonHelpFlags(argc, &argv, false);
+  setbuf(stderr, NULL);
+  google::InitGoogleLogging(argv[0]);
 }

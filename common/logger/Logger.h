@@ -1,6 +1,7 @@
 /**
-main.cpp
-rick <rick.han@yahoo.com>
+FileName : Logger.h
+Author   : rick <rick.han@yahoo.com>
+
 Copyright (c) <2015> <rick>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,21 +22,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#include "main.h"
-#include "AsioCommon.h"
-#include "TcpServer.h"
-#include "Logger.h"
-#include <string>
-#include <iostream>
-using namespace std;
+#ifndef __LOGGER__H__
+#define __LOGGER__H__
 
-int main(int argc, char** argv) 
+#include "glog/logging.h"
+/**
+ * wrapper for glog, may use other log lib in future
+ *
+ * */
+
+class Logger
 {
-  Logger::init(&argc, argv);
-  LOG(ERROR) << "TEST LOG";
-  IoService ioService;
-  string ip = "0.0.0.0";
-  TcpServer tcpServer(ioService, ip, 9999);
-  ioService.run();
-  return 0;
-}
+public:
+
+  // logger初始化
+  static void init(int* argc, char** argv);
+
+private:
+  Logger();
+  ~Logger();
+};
+
+
+#endif // __LOGGER__H__

@@ -8,9 +8,12 @@ cc_binary(
         "//common/network:network",
         "#pthread",
         "#boost_system",
+        "//common/logger:logger",
     ],
     incs = [
-        "//thirdparty/tinyxml",
-        "//common/network",
+        "../../thirdparty/tinyxml",
+        "../../common/network",
+        "../../common/logger",
+        "../../thirdparty/glog-0.3.3",
     ],
 )
