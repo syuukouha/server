@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
 #include "LuaEngine.h"
-
+#include "Logger.h"
 // lua错误处理函数
 static int luaErrorFunc(lua_State* L)
 {
@@ -51,9 +51,10 @@ void LuaEngine::registLib(const char* libname, const luaL_Reg* lib)
   luaL_register(_L, libname, lib);
 }
 
-bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input, LuaValueArray* /*output*/)
+bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input, LuaValueArray* output,
+                                int numRet)
 {
-  lua_settop(_L, 0);
+  int oldTop = lua_gettop(_L);
   lua_pushcfunction(_L, luaErrorFunc); // 错误处理函数
   lua_getglobal(_L, methodName);
   int args = 0;
@@ -64,13 +65,28 @@ bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input, Lu
        it->pushToStack(_L);
      }
   }
-  int result = lua_pcall(_L, args, 0, 1);
+  int result = lua_pcall(_L, args, numRet, 1);
   if (result) {
-    lua_pop(_L, 1); // 错误信息
-    lua_pop(_L, 1); // 错误处理函数
+    const char* errorMsg = lua_tostring(_L, -1);
+    LOG(ERROR) << errorMsg;
+    lua_settop(_L, oldTop);
     return false;
   }
 
-  lua_pop(_L, 1); // 错误处理函数
+  // 填充返回值
+  if (output != nullptr && numRet > 0) {
+    for (int i=0; i<numRet; ++i) {
+      output->push_front(LuaValue::toValue(_L, -1));
+      lua_pop(_L, 1);
+    }
+  }
+
+  lua_settop(_L, oldTop);
   return true;
+}
+
+void LuaEngine::executeLuaCode(const char* luaCode) 
+{
+  luaL_loadstring(_L, luaCode);
+  lua_pcall(_L, 0, 0, 0);
 }

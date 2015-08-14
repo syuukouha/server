@@ -30,5 +30,6 @@ void Logger::init(int* argc, char** argv)
 {
   google::ParseCommandLineNonHelpFlags(argc, &argv, false);
   setbuf(stderr, NULL);
+  FLAGS_logtostderr = true;
   google::InitGoogleLogging(argv[0]);
 }

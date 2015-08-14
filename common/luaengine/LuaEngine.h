@@ -49,7 +49,10 @@ public:
 
   // 调用lua函数
   bool callLuaFunction(const char* methodName, LuaValueArray* input = nullptr, 
-                       LuaValueArray* output = nullptr);
+                       LuaValueArray* output = nullptr, int numRet = 0);
+
+  // 执行lua代码
+  void executeLuaCode(const char* luaCode);
 
 private:
   LuaEngine() : _L(luaL_newstate())

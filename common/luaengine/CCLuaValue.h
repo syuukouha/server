@@ -271,8 +271,26 @@ public:
         }
     }
 
-    static LuaValue toValue(lua_State* L) 
+    static LuaValue toValue(lua_State* L, int idx) 
     {
+        double v = 0;
+        switch(lua_type(L, idx)) 
+        {
+        case LUA_TNIL:
+            return LuaValue::ccobjectValue(nullptr);
+        case LUA_TBOOLEAN:
+            return LuaValue::booleanValue(lua_toboolean(L, idx));
+        case LUA_TNUMBER:
+            v = lua_tonumber(L, idx);
+            if (v == (int)v)
+                return LuaValue::intValue((int)v);
+            return LuaValue::floatValue(lua_tonumber(L, idx));
+        case LUA_TSTRING:
+            return LuaValue::stringValue(lua_tostring(L, idx));
+        default:
+            break;
+        }
+
         return LuaValue::intValue(0); // reserved
     }
 private:
