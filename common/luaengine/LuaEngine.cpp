@@ -51,8 +51,8 @@ void LuaEngine::registLib(const char* libname, const luaL_Reg* lib)
   luaL_register(_L, libname, lib);
 }
 
-bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input, LuaValueArray* output,
-                                int numRet)
+bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input, 
+                                LuaValueArray* output, int numRet)
 {
   int oldTop = lua_gettop(_L);
   lua_pushcfunction(_L, luaErrorFunc); // 错误处理函数
