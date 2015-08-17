@@ -23,15 +23,6 @@ THE SOFTWARE.
 **/
 #include "TcpClient.h"
 
-void TcpClient::send(const std::string& msg)
-{
-  if (_state != eState_Connected) {
-    return;
-  }
-
-  _conn.asyncWrite(msg);
-}
-
 void TcpClient::read() 
 {
   if (_state != eState_Connected) {

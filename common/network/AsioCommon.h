@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 typedef boost::asio::io_service         IoService;
 typedef boost::asio::ip::tcp::socket    Socket;
@@ -35,4 +36,7 @@ typedef boost::system::error_code       ErrorCode;
 
 typedef boost::function<void (const ErrorCode&, size_t)>                   WriteCallback;
 typedef boost::function<void (const ErrorCode&, size_t)>                   ReadCallback;
+
+typedef boost::shared_ptr<boost::asio::streambuf> SendBuffPtr;
+
 #endif // __ASIOCOMMON__H__

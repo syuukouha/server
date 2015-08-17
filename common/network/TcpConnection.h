@@ -32,12 +32,13 @@ THE SOFTWARE.
 
 class TcpConnection : public boost::enable_shared_from_this<TcpConnection>
 {
-enum {kSendBuffSize = 32 * 1024 /*发送缓存大小*/, kRecvBuffSize = 32 * 1024/*接收缓存大小*/,};
+enum {kRecvBuffSize = 32 * 1024/*接收缓存大小*/,};
 public:
   typedef boost::shared_ptr<TcpConnection> TcpConnPtr;
   typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  ConnectionCallback;
   typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  CloseCallback;
   typedef boost::function<void (const ErrorCode&)> ConnectCallback; // asio自带的callback
+  typedef boost::function<bool (const TcpConnPtr& conn, const char*, size_t)> ParseCallback;
 
   TcpConnection(IoService& ioService) : _socket(ioService)
   {
@@ -54,9 +55,10 @@ public:
   void setReadCallback(ReadCallback rcb) { _readCb = rcb; }
   void setConnectCallback(ConnectionCallback ccb) { _connectCb = ccb; }
   void setCloseCallback(CloseCallback clcb) { _closeCb = clcb; }
+  void setParseCallback(ParseCallback pcb) { _parseCb = pcb; }
 
   void asyncRead();
-  void asyncWrite(const std::string& msg);
+  void asyncWrite(SendBuffPtr buf);
   void asyncConnect(const EndPoint& endpoint, ConnectCallback cb) 
   {
     _socket.async_connect(endpoint, cb);
@@ -78,7 +80,6 @@ private:
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);
 
 private:
-  typedef boost::array<char, kSendBuffSize> SendBuff;
   typedef boost::array<char, kRecvBuffSize> RecvBuff;
 
   Socket                _socket;
@@ -87,6 +88,7 @@ private:
   ReadCallback          _readCb;
   ConnectionCallback    _connectCb;
   CloseCallback         _closeCb;
+  ParseCallback         _parseCb;
 };
 
 typedef boost::shared_ptr<TcpConnection> TcpConnPtr;

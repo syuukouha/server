@@ -59,7 +59,14 @@ public:
   }
 
   // 发送消息到服务端
-  void send(const std::string& msg);
+  void send(SendBuffPtr buff)
+  {
+    if (_state != eState_Connected) {
+      return;
+    }
+
+    _conn.asyncWrite(buff);
+  }
 
   // 读取消息
   void read();

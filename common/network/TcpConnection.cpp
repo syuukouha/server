@@ -26,21 +26,17 @@ THE SOFTWARE.
 
 void TcpConnection::asyncRead()
 {
-  boost::asio::async_read(_socket, boost::asio::buffer(_recvBuf), 
+  _socket.async_read_some(boost::asio::buffer(_recvBuf), 
                           boost::bind(&TcpConnection::handleRead,
                                       shared_from_this(),
                                       boost::asio::placeholders::error,
                                       boost::asio::placeholders::bytes_transferred));
 }
 
-void TcpConnection::asyncWrite(const std::string& msg)
+void TcpConnection::asyncWrite(SendBuffPtr buff)
 {
-  if (msg.size() > kSendBuffSize) {
-      return;
-  }
-
   //  _sendBuf.
-  boost::asio::async_write(_socket, boost::asio::buffer(msg), 
+  boost::asio::async_write(_socket, *buff, 
                            boost::bind(&TcpConnection::handleWrite,
                                        shared_from_this(),
                                        boost::asio::placeholders::error,
@@ -61,6 +57,10 @@ void TcpConnection::start()
 
 void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
 {
+  if (error) {
+    close();
+    return;
+  }
   if (_readCb) {
     _readCb(error, bytesTransferred);
   }
