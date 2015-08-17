@@ -25,6 +25,7 @@ THE SOFTWARE.
 #define __TCPCONNECTION__H__
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/array.hpp>
 #include "AsioCommon.h"
@@ -33,40 +34,59 @@ class TcpConnection : public boost::enable_shared_from_this<TcpConnection>
 {
 enum {kSendBuffSize = 32 * 1024 /*发送缓存大小*/, kRecvBuffSize = 32 * 1024/*接收缓存大小*/,};
 public:
+  typedef boost::shared_ptr<TcpConnection> TcpConnPtr;
+  typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  ConnectionCallback;
+  typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  CloseCallback;
+  typedef boost::function<void (const ErrorCode&)> ConnectCallback; // asio自带的callback
+
   TcpConnection(IoService& ioService) : _socket(ioService)
   {
   }
 
   ~TcpConnection()
   {
+    close();
   }
-
-  void setWriteCallback(WriteCallback wcb) { _writeCb = wcb; }
-  void setReadCallback(ReadCallback rcb) { _readCb = rcb; }
-
-  void asyncRead();
-
-  void asyncWrite(const std::string& msg);
 
   Socket& socket() { return _socket; }
 
+  void setWriteCallback(WriteCallback wcb) { _writeCb = wcb; }
+  void setReadCallback(ReadCallback rcb) { _readCb = rcb; }
+  void setConnectCallback(ConnectionCallback ccb) { _connectCb = ccb; }
+  void setCloseCallback(CloseCallback clcb) { _closeCb = clcb; }
+
+  void asyncRead();
+  void asyncWrite(const std::string& msg);
   void asyncConnect(const EndPoint& endpoint, ConnectCallback cb) 
   {
     _socket.async_connect(endpoint, cb);
   }
 
   void start();
+  void close() 
+  { 
+    if (_socket.is_open()) {
+      ErrorCode err;
+      if (_closeCb) {
+        _closeCb(err, shared_from_this());
+      }
+      _socket.close(err); 
+    }
+  }
 private:
   void handleRead(const ErrorCode& error, size_t bytesTransferred);
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);
+
 private:
   typedef boost::array<char, kSendBuffSize> SendBuff;
   typedef boost::array<char, kRecvBuffSize> RecvBuff;
 
-  Socket        _socket;
-  RecvBuff      _recvBuf;
-  WriteCallback _writeCb;
-  ReadCallback  _readCb;
+  Socket                _socket;
+  RecvBuff              _recvBuf;
+  WriteCallback         _writeCb;
+  ReadCallback          _readCb;
+  ConnectionCallback    _connectCb;
+  CloseCallback         _closeCb;
 };
 
 typedef boost::shared_ptr<TcpConnection> TcpConnPtr;

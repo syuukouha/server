@@ -27,7 +27,32 @@ THE SOFTWARE.
 #include "Logger.h"
 #include <string>
 #include <iostream>
+#include <boost/bind.hpp>
 using namespace std;
+
+void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
+{
+  LOG(ERROR) << "Connection destroyed!";
+}
+
+void handleRead(const ErrorCode& err, size_t bytes) 
+{
+  LOG(ERROR) << "read " << bytes << " data";
+} 
+
+void handleWrite(const ErrorCode& err, size_t bytes)
+{
+  LOG(ERROR) << "write " << bytes << " data";
+}
+
+void handleNewConn(const ErrorCode& err, const TcpConnPtr& conn) 
+{
+  LOG(ERROR) << "New Connection Comes in!!!";
+  conn->setCloseCallback(boost::bind(handleClose, _1, _2));
+  conn->setWriteCallback(boost::bind(handleWrite, _1, _2));
+  conn->setReadCallback(boost::bind(handleRead, _1, _2));
+}
+
 
 int main(int argc, char** argv) 
 {
@@ -35,7 +60,7 @@ int main(int argc, char** argv)
   LOG(ERROR) << "TEST LOG";
   IoService ioService;
   string ip = "0.0.0.0";
-  TcpServer tcpServer(ioService, ip, 9999);
+  TcpServer tcpServer(ioService, ip, 9999, boost::bind(handleNewConn, _1, _2));
   ioService.run();
   return 0;
 }

@@ -34,7 +34,9 @@ THE SOFTWARE.
 class TcpServer : boost::noncopyable
 {
 public:
-  TcpServer(IoService& ioService, std::string& ip, int port, ConnectCallback cb = nullptr)
+  typedef TcpConnection::ConnectionCallback ConnectionCallback;
+
+  TcpServer(IoService& ioService, std::string& ip, int port, ConnectionCallback cb)
     : _ioService(ioService),
       _ep(boost::asio::ip::address::from_string(ip), port),
       _acceptor(ioService, _ep), _connectCb(cb)
@@ -65,16 +67,16 @@ private:
       return;  
     }
 
+    conn->setConnectCallback(_connectCb);
     conn->start(); // 发一个读请求
-    //_connectCb(err, *conn);
     conn.reset(new TcpConnection(_ioService));
     listen(conn);
   }
 private:
-  IoService&        _ioService;
-  EndPoint          _ep;
-  Acceptor          _acceptor;
-  ConnectCallback   _connectCb;
+  IoService&         _ioService;
+  EndPoint           _ep;
+  Acceptor           _acceptor;
+  ConnectionCallback _connectCb;
 };
 
 #endif // __TCPSERVER__H__

@@ -31,17 +31,19 @@ THE SOFTWARE.
 #include <string>
 class TcpClient : public boost::noncopyable
 {
-enum {eState_NotConnected, eState_Connecting, eState_Connected, };
+enum {eState_NotConnected, eState_Connecting, eState_Connected, eState_Quit,};
 public:
-  TcpClient(IoService& ioService, std::string ip, int port)
+  typedef TcpConnection::ConnectionCallback ConnectionCallback;
+
+  TcpClient(IoService& ioService, std::string ip, int port, ConnectionCallback cb)
     : _conn(ioService), _state(eState_NotConnected),
       _ep(boost::asio::ip::address::from_string(ip), port)
-  {}
+  {
+    _conn.setConnectCallback(cb);
+  }
 
   ~TcpClient() {}
 
-  // 连接建立回调
-  void setConnectCallback(ConnectCallback ccb) { _connectCb = ccb; }
   // 读完成回调
   void setReadCallback(ReadCallback rcb) { _conn.setReadCallback(rcb); }
   // 写完成回调
@@ -61,25 +63,27 @@ public:
 
   // 读取消息
   void read();
+
+  // 主动关闭连接
+  void disconnect() 
+  {
+    _state = eState_Quit;
+    _conn.close();
+  }
 private:
   void handleConnect(const ErrorCode& error)
   {
     if (!error) {
       _state = eState_Connected;
       _conn.start();
-    } else {
+    } else if (_state != eState_Quit) {
       connect(); // 重连
-    }
-
-    if (_connectCb) {
-      _connectCb(error);
     }
   }
 private:
-  TcpConnection     _conn;
-  int               _state;
-  EndPoint          _ep;
-  ConnectCallback   _connectCb;
+  TcpConnection         _conn;
+  int                   _state;
+  EndPoint              _ep;
 };
 
 

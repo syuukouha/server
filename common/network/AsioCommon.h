@@ -33,8 +33,6 @@ typedef boost::asio::ip::tcp::endpoint  EndPoint;
 typedef boost::asio::ip::tcp::acceptor  Acceptor;
 typedef boost::system::error_code       ErrorCode;
 
-typedef boost::function<void (const ErrorCode&)>                           ConnectCallback;
 typedef boost::function<void (const ErrorCode&, size_t)>                   WriteCallback;
 typedef boost::function<void (const ErrorCode&, size_t)>                   ReadCallback;
-
 #endif // __ASIOCOMMON__H__
