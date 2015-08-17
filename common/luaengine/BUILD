@@ -11,7 +11,7 @@ cc_library(
     incs = [
         "../../thirdparty/lua-5.1",
         "../logger",
-        '../../thirdparty/glog-0.3.3',
+        "../../thirdparty/glog-0.3.3",
     ],
 )
 
@@ -19,5 +19,5 @@ cc_binary(
     name = "testlua",
     srcs = ["TestLua.cpp"],
     deps = [":luaengine", "#pthread"],
-    incs = ["../../thirdparty/lua-5.1", "../logger", "../../thirdparty/glog-0.3.3",],
+    incs = ["../../thirdparty/lua-5.1", "../logger", "../../thirdparty/glog-0.3.3"],
 )

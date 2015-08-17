@@ -35,8 +35,6 @@ enum {kSendBuffSize = 32 * 1024 /*发送缓存大小*/, kRecvBuffSize = 32 * 102
 public:
   TcpConnection(IoService& ioService) : _socket(ioService)
   {
-    //static boost::asio::ip::tcp::no_delay option(true);
-    //_socket.set_option(option);
   }
 
   ~TcpConnection()
@@ -56,6 +54,8 @@ public:
   {
     _socket.async_connect(endpoint, cb);
   }
+
+  void start();
 private:
   void handleRead(const ErrorCode& error, size_t bytesTransferred);
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);

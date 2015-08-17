@@ -29,14 +29,15 @@ THE SOFTWARE.
 #include <boost/bind.hpp>
 #include <string>
 #include "TcpConnection.h"
+#include "Logger.h"
 
 class TcpServer : boost::noncopyable
 {
 public:
-  TcpServer(IoService& ioService, std::string& ip, int port)
+  TcpServer(IoService& ioService, std::string& ip, int port, ConnectCallback cb = nullptr)
     : _ioService(ioService),
       _ep(boost::asio::ip::address::from_string(ip), port),
-      _acceptor(ioService, _ep)
+      _acceptor(ioService, _ep), _connectCb(cb)
   {
     _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     _acceptor.set_option(boost::asio::ip::tcp::socket::keep_alive(true));
@@ -54,21 +55,26 @@ public:
                                        boost::asio::placeholders::error));
   }
 
+  void stop() { _acceptor.close(); }
+
 private:
   void handleAcceptor(TcpConnPtr& conn, const ErrorCode& err) 
   {
     if (err) {
+      LOG(ERROR) << "accept error" ;
       return;  
     }
 
-    conn->asyncRead(); // 发一个读请求
+    conn->start(); // 发一个读请求
+    //_connectCb(err, *conn);
     conn.reset(new TcpConnection(_ioService));
     listen(conn);
   }
 private:
-  IoService& _ioService;
-  EndPoint   _ep;
-  Acceptor   _acceptor;
+  IoService&        _ioService;
+  EndPoint          _ep;
+  Acceptor          _acceptor;
+  ConnectCallback   _connectCb;
 };
 
 #endif // __TCPSERVER__H__

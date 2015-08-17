@@ -66,6 +66,7 @@ private:
   {
     if (!error) {
       _state = eState_Connected;
+      _conn.start();
     } else {
       connect(); // 重连
     }

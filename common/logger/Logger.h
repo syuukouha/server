@@ -25,7 +25,7 @@ THE SOFTWARE.
 #ifndef __LOGGER__H__
 #define __LOGGER__H__
 
-#include "glog/logging.h"
+#include "thirdparty/glog-0.3.3/glog/logging.h"
 /**
  * wrapper for glog, may use other log lib in future
  *

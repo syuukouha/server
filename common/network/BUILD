@@ -9,5 +9,7 @@ cc_library(
     ],
     incs = [
         ".",
+        "../logger",
+        "../../thirdparty/glog-0.3.3",
     ],
 )

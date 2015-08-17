@@ -47,6 +47,14 @@ void TcpConnection::asyncWrite(const std::string& msg)
                                        boost::asio::placeholders::bytes_transferred));
 }
 
+void TcpConnection::start()
+{
+  _socket.set_option(boost::asio::ip::tcp::socket::keep_alive(true));
+  _socket.set_option(boost::asio::ip::tcp::no_delay(true));
+  _socket.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+  asyncRead();
+}
+
 void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
 {
   if (_readCb) {
