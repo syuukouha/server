@@ -27,7 +27,8 @@ THE SOFTWARE.
 #include <string>
 #include <iostream>
 #include <boost/bind.hpp>
-void onConnect(const ErrorCode& err)
+#include "common/network/TcpConnection.h"
+void onConnect(const ErrorCode& err, const TcpConnPtr& conn)
 {
   if (!err) {
     std::cout << "连接建立成功！！！！！" << std::endl;
@@ -40,9 +41,8 @@ int main(int argc, char** argv)
 {
   IoService ioService;
   std::string ip = "127.0.0.1";
-  TcpClient client(ioService, ip, 9999);
-  client.setConnectCallback(boost::bind(onConnect, 
-                                        boost::asio::placeholders::error));
+  TcpClient client(ioService, ip, 9999,
+                   boost::bind(onConnect, _1, _2));
   client.connect();
   ioService.run();
   return 0;
