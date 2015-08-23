@@ -24,6 +24,7 @@ THE SOFTWARE.
 **/
 #include "LuaEngine.h"
 #include "Logger.h"
+#include "lfs.h"
 // lua错误处理函数
 static int luaErrorFunc(lua_State* L)
 {
@@ -58,6 +59,16 @@ static int luaErrorFunc(lua_State* L)
 
   LOG(ERROR) << stackTrace;
   return 0;
+}
+
+LuaEngine::LuaEngine(): _L(luaL_newstate())
+{
+  luaL_openlibs(_L);
+  luaopen_lfs(_L);
+}
+
+LuaEngine::~LuaEngine()
+{
 }
 
 void LuaEngine::addSearchPath(const char* path)

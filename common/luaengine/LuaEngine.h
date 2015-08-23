@@ -55,10 +55,8 @@ public:
   void executeLuaCode(const char* luaCode);
 
 private:
-  LuaEngine() : _L(luaL_newstate())
-  {
-    luaL_openlibs(_L);
-  }
+  LuaEngine();
+  ~LuaEngine();
 
 private:
   lua_State*    _L;

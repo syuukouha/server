@@ -24,9 +24,26 @@ THE SOFTWARE.
 **/
 #include "LuaEngine.h"
 #include <iostream>
+
+// cpp func
+static int cppFunc(lua_State* L)
+{
+  int args = lua_gettop(L);
+  std::cout << "num of args passed by lua=" << args << std::endl;
+  lua_pushboolean(L, true); // 返回值
+  return 1;
+}
+
+static const luaL_Reg funcs[] = 
+{
+  {"CppFunc", cppFunc},
+  {NULL, NULL},
+};
+
 int main(int argc, char** argv)
 {
   LuaEngine& ins = LuaEngine::instance();
+  ins.registLib("Test", funcs);
   ins.loadFile("main.lua");
   ins.callLuaFunction("CalledByCpp");
   LuaValueArray paramList;
