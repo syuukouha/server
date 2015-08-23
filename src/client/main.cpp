@@ -28,13 +28,41 @@ THE SOFTWARE.
 #include <iostream>
 #include <boost/bind.hpp>
 #include "common/network/TcpConnection.h"
+#include <unistd.h>
 void onConnect(const ErrorCode& err, const TcpConnPtr& conn)
 {
   if (!err) {
     std::cout << "连接建立成功！！！！！" << std::endl;
+    std::string sendStr = "testsending!";
+    for (int i=1; i<2; ++i) {
+      conn->asyncWrite(sendStr);
+      //sleep(1);
+    }
   } else {
-    std::cout << "连接建立失败！！！！！自动重连" << std::endl; 
+    std::cout << "连接建立失败！！！！！自动重连" << std::endl;
   }
+}
+
+void handleWrite(const ErrorCode& err, size_t bytes)
+{
+  if (err) {
+    std::cout << "发送数据失败";
+    return;
+  }
+
+  std::cout << "发送成功，大小=" << bytes << "字节" << std::endl;
+}
+
+bool handleParse(const TcpConnPtr& conn, const char* data, size_t sz)
+{
+  std::cout << "接收到数据 size=" << sz << "字节" << std::endl;
+  for (size_t s=0; s<sz; ++s) {
+    std::cout << data[s];
+  }
+  std::cout << std::endl;
+  std::string sendStr = "testsending!";
+  conn->asyncWrite(sendStr);
+  return true;
 }
 
 int main(int argc, char** argv)
@@ -43,6 +71,8 @@ int main(int argc, char** argv)
   std::string ip = "127.0.0.1";
   TcpClient client(ioService, ip, 9999,
                    boost::bind(onConnect, _1, _2));
+  client.setParseCallback(boost::bind(handleParse, _1, _2, _3));
+  client.setWriteCallback(boost::bind(handleWrite, _1, _2));
   client.connect();
   ioService.run();
   return 0;

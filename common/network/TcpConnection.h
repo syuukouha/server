@@ -59,6 +59,13 @@ public:
 
   void asyncRead();
   void asyncWrite(SendBuffPtr buf);
+  void asyncWrite(const std::string& content)
+  {
+    SendBuffPtr buf(new boost::asio::streambuf());
+    std::ostream os(buf.get());
+    os.write(content.data(), content.size());
+    asyncWrite(buf);
+  }
   void asyncConnect(const EndPoint& endpoint, ConnectCallback cb) 
   {
     _socket.async_connect(endpoint, cb);

@@ -34,26 +34,29 @@ class TcpClient : public boost::noncopyable
 enum {eState_NotConnected, eState_Connecting, eState_Connected, eState_Quit,};
 public:
   typedef TcpConnection::ConnectionCallback ConnectionCallback;
+  typedef TcpConnection::ParseCallback ParseCallback;
 
   TcpClient(IoService& ioService, std::string ip, int port, ConnectionCallback cb)
-    : _conn(ioService), _state(eState_NotConnected),
+    : _conn(new TcpConnection(ioService)), _state(eState_NotConnected),
       _ep(boost::asio::ip::address::from_string(ip), port)
   {
-    _conn.setConnectCallback(cb);
+    _conn->setConnectCallback(cb);
   }
 
   ~TcpClient() {}
 
   // 读完成回调
-  void setReadCallback(ReadCallback rcb) { _conn.setReadCallback(rcb); }
+  void setParseCallback(ParseCallback pcb) { _conn->setParseCallback(pcb); }
+  // 暂时不使用
+  void setReadCallback(ReadCallback rcb) { _conn->setReadCallback(rcb); }
   // 写完成回调
-  void setWriteCallback(WriteCallback wcb) { _conn.setWriteCallback(wcb); }
+  void setWriteCallback(WriteCallback wcb) { _conn->setWriteCallback(wcb); }
 
   // 建立连接
   void connect()
   {
     _state = eState_Connecting;
-    _conn.asyncConnect(_ep, boost::bind(&TcpClient::handleConnect,
+    _conn->asyncConnect(_ep, boost::bind(&TcpClient::handleConnect,
                                         this,
                                         boost::asio::placeholders::error));
   }
@@ -65,7 +68,7 @@ public:
       return;
     }
 
-    _conn.asyncWrite(buff);
+    _conn->asyncWrite(buff);
   }
 
   // 读取消息
@@ -75,20 +78,20 @@ public:
   void disconnect() 
   {
     _state = eState_Quit;
-    _conn.close();
+    _conn->close();
   }
 private:
   void handleConnect(const ErrorCode& error)
   {
     if (!error) {
       _state = eState_Connected;
-      _conn.start();
+      _conn->start();
     } else if (_state != eState_Quit) {
       connect(); // 重连
     }
   }
 private:
-  TcpConnection         _conn;
+  TcpConnPtr            _conn;
   int                   _state;
   EndPoint              _ep;
 };

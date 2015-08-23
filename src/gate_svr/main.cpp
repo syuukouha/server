@@ -45,12 +45,30 @@ void handleWrite(const ErrorCode& err, size_t bytes)
   LOG(ERROR) << "write " << bytes << " data";
 }
 
+bool handleParse(const TcpConnPtr& conn, const char* data, size_t sz)
+{
+  if (sz == 0) {
+    LOG(ERROR) << "failed to parse data";
+    return false;
+  }
+
+  // print every byte
+  std::string repy = ""; // 测试这样写而已
+  for (size_t i=0; i<sz; ++i) {
+    LOG(ERROR) << "data[" << i << "] = " << data[i];
+    repy += data[i];
+  }
+  conn->asyncWrite(repy);
+  return true;
+}
+
 void handleNewConn(const ErrorCode& err, const TcpConnPtr& conn) 
 {
   LOG(ERROR) << "New Connection Comes in!!!";
   conn->setCloseCallback(boost::bind(handleClose, _1, _2));
   conn->setWriteCallback(boost::bind(handleWrite, _1, _2));
-  conn->setReadCallback(boost::bind(handleRead, _1, _2));
+  //conn->setReadCallback(boost::bind(handleRead, _1, _2));
+  conn->setParseCallback(boost::bind(handleParse, _1, _2, _3));
 }
 
 

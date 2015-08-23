@@ -29,5 +29,5 @@ void TcpClient::read()
     return;
   }
 
-  _conn.asyncRead();
+  _conn->asyncRead();
 }
