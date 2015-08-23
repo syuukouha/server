@@ -27,6 +27,36 @@ THE SOFTWARE.
 // lua错误处理函数
 static int luaErrorFunc(lua_State* L)
 {
+  lua_Debug debug = {};
+  std::string stackTrace = "";
+  if (lua_gettop(L) > 0) {
+    stackTrace += lua_tostring(L, -1);
+  }
+  stackTrace += "\nstack traceback";
+
+  char buff[513] = {0};
+  int stackLevel = 1;
+  while(lua_getstack(L, stackLevel++, &debug)) {
+    lua_getinfo(L, "Snl", &debug);
+    snprintf(buff, 512, "\n\t%s", debug.short_src);
+    int buffLen = strlen(buff);
+    if (*debug.namewhat != '\0') {
+      snprintf(buff+buffLen, 512-buffLen, " in function \'%s\'", debug.name);
+    } else {
+      if (*debug.what == 'm') {
+        snprintf(buff+buffLen, 512-buffLen, " in main chunk ");
+      } else if(*debug.what == 't' || *debug.what == 'C') {
+        snprintf(buff+buffLen, 512-buffLen, " ? ");
+      } else {
+        snprintf(buff+buffLen, 512-buffLen, " in function <%s:%d>",
+                 debug.short_src, debug.linedefined);
+      }
+    }
+
+    stackTrace += buff;
+  }
+
+  LOG(ERROR) << stackTrace;
   return 0;
 }
 
