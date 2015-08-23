@@ -57,8 +57,8 @@ public:
   {
     _state = eState_Connecting;
     _conn->asyncConnect(_ep, boost::bind(&TcpClient::handleConnect,
-                                        this,
-                                        boost::asio::placeholders::error));
+                                         this,
+                                         boost::asio::placeholders::error));
   }
 
   // 发送消息到服务端

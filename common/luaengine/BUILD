@@ -3,8 +3,8 @@ cc_library(
     srcs = [
         "CCLuaValue.cpp",
         "LuaEngine.cpp",
-        #"LuaFileSystem.cpp",
         'lfs.c',
+        'LuaNetModule.cpp',
     ],
     deps = [
         "//thirdparty/lua-5.1:lua",

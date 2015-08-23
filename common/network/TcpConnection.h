@@ -82,6 +82,9 @@ public:
       _socket.close(err); 
     }
   }
+
+  void setConnId(uint64_t id) { _connId = id; }
+  uint64_t getConnId() { return _connId; }
 private:
   void handleRead(const ErrorCode& error, size_t bytesTransferred);
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);
@@ -96,6 +99,7 @@ private:
   ConnectionCallback    _connectCb;
   CloseCallback         _closeCb;
   ParseCallback         _parseCb;
+  uint64_t              _connId;
 };
 
 typedef boost::shared_ptr<TcpConnection> TcpConnPtr;

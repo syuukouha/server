@@ -30,17 +30,20 @@ THE SOFTWARE.
 #include <string>
 #include "TcpConnection.h"
 #include "Logger.h"
-
+#include <ext/hash_map>
 class TcpServer : boost::noncopyable
 {
 public:
   typedef TcpConnection::ConnectionCallback ConnectionCallback;
+  typedef TcpConnection::CloseCallback CloseCallback;
 
   TcpServer(IoService& ioService, std::string& ip, int port, ConnectionCallback cb)
     : _ioService(ioService),
       _ep(boost::asio::ip::address::from_string(ip), port),
       _acceptor(ioService, _ep), _connectCb(cb)
   {
+    _closeCb = boost::bind(&TcpServer::handleDisconnect, this, _1, _2);
+    _nextConnId = 0;
     _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     _acceptor.set_option(boost::asio::ip::tcp::socket::keep_alive(true));
     _acceptor.set_option(boost::asio::ip::tcp::no_delay(true));
@@ -67,16 +70,34 @@ private:
       return;  
     }
 
+    conn->setConnId(_nextConnId);
+    _connMaps[_nextConnId] = conn;
     conn->setConnectCallback(_connectCb);
+    conn->setCloseCallback(_closeCb);
     conn->start(); // 发一个读请求
     conn.reset(new TcpConnection(_ioService));
     listen(conn);
   }
+
+  void handleDisconnect(const ErrorCode& err,const TcpConnPtr& conn) {
+    uint64_t id = conn->getConnId();
+    ConnIter it = _connMaps.find(id);
+    if (it == _connMaps.end()) {
+      return;
+    }
+    _connMaps.erase(it);
+  }
 private:
+  typedef __gnu_cxx::hash_map<uint64_t, TcpConnPtr> ConnMaps;
+  typedef ConnMaps::iterator ConnIter;
+
   IoService&         _ioService;
   EndPoint           _ep;
   Acceptor           _acceptor;
   ConnectionCallback _connectCb;
+  CloseCallback      _closeCb;
+  uint64_t           _nextConnId; // 下一个连接的id
+  ConnMaps           _connMaps;
 };
 
 #endif // __TCPSERVER__H__
