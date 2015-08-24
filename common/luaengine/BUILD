@@ -14,6 +14,7 @@ cc_library(
         "../../thirdparty/lua-5.1",
         "../logger",
         "../../thirdparty/glog-0.3.3",
+        "../network",
     ],
 )
 

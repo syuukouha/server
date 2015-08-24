@@ -24,14 +24,53 @@ THE SOFTWARE.
 **/
 #include "LuaNetModule.h"
 #include "LuaEngine.h"
+#include "TcpClient.h"
+#include "NetworkManager.h"
+#include "Logger.h"
+
+#define TCPCLIENT_META "tcp client meta"
+
+struct luaTcpClient
+{
+  TcpClient* _client;
+};
+
+static int newTcpClient(lua_State* L)
+{
+  int args = lua_gettop(L);
+  if (args < 2) {
+    LOG(ERROR) << "newTcpClient two few argument";
+    return 0;
+  }
+
+  //const char* ip = lua_tostring(L, 1);
+  //int port = lua_tointeger(L, 2);
+
+  luaTcpClient* client = (luaTcpClient*)lua_newuserdata(L, sizeof(luaTcpClient));
+  client->_client = NULL;
+  luaL_getmetatable(L, TCPCLIENT_META);
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+void openTcpClient(lua_State* L) 
+{
+  luaL_newmetatable(L, TCPCLIENT_META);
+
+  // method table
+  lua_newtable(L);
+}
 
 const static luaL_Reg net_funcs[] = 
 {
+  {"NewTcpClient", newTcpClient},
   {NULL, NULL},
 };
 
 void openLuaNetModule()
 {
   LuaEngine& ins = LuaEngine::instance();
-  ins.registLib("net", net_funcs);
+  ins.registLib("Net", net_funcs);
+  openTcpClient(ins.state());
 }
