@@ -24,7 +24,7 @@ THE SOFTWARE.
 **/
 #include "LuaEngine.h"
 #include <iostream>
-
+#include "LuaNetModule.h"
 // cpp func
 static int cppFunc(lua_State* L)
 {
@@ -43,6 +43,7 @@ static const luaL_Reg funcs[] =
 int main(int argc, char** argv)
 {
   LuaEngine& ins = LuaEngine::instance();
+  openLuaNetModule();
   ins.registLib("Test", funcs);
   ins.loadFile("main.lua");
   ins.callLuaFunction("CalledByCpp");

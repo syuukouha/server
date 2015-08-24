@@ -85,6 +85,21 @@ static int connect(lua_State* L)
   return 0;
 }
 
+static int isconnected(lua_State* L) 
+{
+  luaTcpClient* client = (luaTcpClient*)luaL_checkudata(L, 1, TCPCLIENT_META);
+  if (client != nullptr && client->_client != nullptr) {
+    if (client->_client->isConnected()) {
+      lua_pushboolean(L, true);
+    } else {
+      lua_pushboolean(L, false);
+    }
+    return 1;
+  }
+  lua_pushboolean(L, false);
+  return 1;
+}
+
 void openTcpClient(lua_State* L) 
 {
   luaL_newmetatable(L, TCPCLIENT_META);
@@ -95,6 +110,8 @@ void openTcpClient(lua_State* L)
   lua_setfield(L, -2, "disconnect");
   lua_pushcfunction(L, connect);
   lua_setfield(L, -2, "connect");
+  lua_pushcfunction(L, isconnected);
+  lua_setfield(L, -2, "isconnected");
 }
 
 const static luaL_Reg net_funcs[] = 

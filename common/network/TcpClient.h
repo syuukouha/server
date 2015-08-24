@@ -71,6 +71,7 @@ public:
     _conn->asyncWrite(buff);
   }
 
+  bool isConnected() { return _state == eState_Connected; }
   // 读取消息
   void read();
 

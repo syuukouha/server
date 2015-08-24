@@ -6,6 +6,13 @@ function CalledByCpp()
     for file in lfs.dir(dir) do
         print (file)
     end
+
+    local tcpClient = Net.NewTcpClient('127.0.0.1', 80)
+    if tcpClient == nil then
+        print ('nilnilnil')
+    else
+        tcpClient:connect()
+    end
 end
 
 function TwoArgs(arg1, arg2)

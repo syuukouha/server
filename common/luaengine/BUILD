@@ -21,6 +21,11 @@ cc_library(
 cc_binary(
     name = "testlua",
     srcs = ["TestLua.cpp"],
-    deps = [":luaengine", "#pthread"],
+    deps = [
+        ":luaengine", 
+        "#pthread",
+        "#boost_system",
+        '//common/network:network'
+    ],
     incs = ["../../thirdparty/lua-5.1", "../logger", "../../thirdparty/glog-0.3.3"],
 )
