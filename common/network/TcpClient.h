@@ -38,7 +38,7 @@ public:
 
   TcpClient(IoService& ioService, std::string ip, int port, ConnectionCallback cb)
     : _conn(new TcpConnection(ioService)), _state(eState_NotConnected),
-      _ep(boost::asio::ip::address::from_string(ip), port)
+      _ep(boost::asio::ip::address::from_string(ip), port), _userData(nullptr)
   {
     _conn->setConnectCallback(cb);
   }
@@ -81,11 +81,15 @@ public:
     _state = eState_Quit;
     _conn->close();
   }
+
+  void* getUserData() { return _userData; }
+  void  setUserData(void* data) { _userData = data; }
 private:
   void handleConnect(const ErrorCode& error)
   {
     if (!error) {
       _state = eState_Connected;
+      _conn->setUserData(_userData);
       _conn->start();
     } else if (_state != eState_Quit) {
       connect(); // 重连
@@ -95,6 +99,7 @@ private:
   TcpConnPtr            _conn;
   int                   _state;
   EndPoint              _ep;
+  void*                 _userData;
 };
 
 

@@ -40,7 +40,7 @@ public:
   typedef boost::function<void (const ErrorCode&)> ConnectCallback; // asio自带的callback
   typedef boost::function<bool (const TcpConnPtr& conn, const char*, size_t)> ParseCallback;
 
-  TcpConnection(IoService& ioService) : _socket(ioService)
+  TcpConnection(IoService& ioService) : _socket(ioService), _userData(nullptr)
   {
   }
 
@@ -85,6 +85,9 @@ public:
 
   void setConnId(uint64_t id) { _connId = id; }
   uint64_t getConnId() { return _connId; }
+
+  void* getUserData() { return _userData; }
+  void setUserData(void* data) { _userData = data; }
 private:
   void handleRead(const ErrorCode& error, size_t bytesTransferred);
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);
@@ -100,6 +103,7 @@ private:
   CloseCallback         _closeCb;
   ParseCallback         _parseCb;
   uint64_t              _connId;
+  void*                 _userData;
 };
 
 typedef boost::shared_ptr<TcpConnection> TcpConnPtr;
