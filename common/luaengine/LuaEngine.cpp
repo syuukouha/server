@@ -126,6 +126,46 @@ bool LuaEngine::callLuaFunction(const char* methodName, LuaValueArray* input,
   return true;
 }
 
+bool LuaEngine::callLuaFunction(int64_t* func, LuaValueArray* input,
+                                LuaValueArray* output, int numRet) 
+{
+  if (func == nullptr || *func == 0) {
+    return false;
+  }
+
+  lua_settop(_L, 0);
+  lua_pushcfunction(_L, luaErrorFunc);
+
+  lua_pushlightuserdata(_L, reinterpret_cast<void*>(func));
+  lua_gettable(_L, LUA_REGISTRYINDEX);
+  if (lua_type(_L, -1) == LUA_TFUNCTION) {
+    int args = 0;
+    if (input != nullptr) {
+      LuaValueArrayIterator it = input->begin();
+      for (; it != input->end(); ++it) {
+        args++;
+        it->pushToStack(_L);
+      }
+    }
+    int result = lua_pcall(_L, args, numRet, 1);
+    if (result) {
+      const char* errorMsg = lua_tostring(_L, -1);
+      LOG(ERROR) << errorMsg;
+      lua_settop(_L, 0);
+      return false;
+    }
+    // 填充返回值
+    if (output != nullptr && numRet > 0) {
+      for (int i=0; i<numRet; ++i) {
+        output->push_front(LuaValue::toValue(_L, -1));
+        lua_pop(_L, 1);
+      }
+    }
+  }
+  lua_settop(_L, 0);
+  return true;
+}
+
 void LuaEngine::executeLuaCode(const char* luaCode) 
 {
   luaL_loadstring(_L, luaCode);

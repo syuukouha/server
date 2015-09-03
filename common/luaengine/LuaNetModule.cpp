@@ -41,9 +41,18 @@ struct luaTcpClient
 void handleClientConnected(const ErrorCode& err, const TcpConnPtr& conn)
 {
   luaTcpClient* client = reinterpret_cast<luaTcpClient*>(conn->getUserData());
-  LuaEngine& ins = LuaEngine::instance();
-  if(err) {
+  if (client == nullptr || client->_onConnectFunc == 0) {
+    return;
   }
+
+  LuaEngine& ins = LuaEngine::instance();
+  LuaValueArray inputArgs;
+  if (err) {
+    inputArgs.push_back(LuaValue::booleanValue(false));
+  } else {
+    inputArgs.push_back(LuaValue::booleanValue(true));
+  }
+  ins.callLuaFunction(&client->_onConnectFunc, &inputArgs);
 }
 
 static int newTcpClient(lua_State* L)
@@ -75,6 +84,13 @@ static int newTcpClient(lua_State* L)
   return 1;
 }
 
+static int start(lua_State* L) 
+{
+  IoService& ioService = NetworkManager::instance().getIoService();
+  ioService.run();
+  return 0;
+}
+
 #define CHECK_TCP_CLIENT\
     luaTcpClient* client = (luaTcpClient*)luaL_checkudata(L, 1, TCPCLIENT_META);\
     if (client == nullptr || client->_client == nullptr) {\
@@ -90,8 +106,10 @@ static int disconnect(lua_State* L)
 
 static int connect(lua_State* L)
 {
+  LOG(ERROR) << "TcpClient Connect called!!!";
   CHECK_TCP_CLIENT;
   client->_client->connect();
+  LOG(ERROR) << "After call";
   return 0;
 }
 
@@ -158,7 +176,9 @@ static int isconnected(lua_State* L)
 
 static int setConnectCallback(lua_State* L)
 {
+  LOG(ERROR) << "before set callback";
   SET_LUA_CALLBACK(client->_onConnectFunc)
+  LOG(ERROR) << "after set callback";
 }
 
 static int setCloseCallback(lua_State* L)
@@ -194,6 +214,7 @@ void openTcpClient(lua_State* L)
 const static luaL_Reg net_funcs[] =
 {
   {"NewTcpClient", newTcpClient},
+  {"Start", start},
   {NULL, NULL},
 };
 

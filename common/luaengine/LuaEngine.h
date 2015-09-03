@@ -51,6 +51,9 @@ public:
   bool callLuaFunction(const char* methodName, LuaValueArray* input = nullptr, 
                        LuaValueArray* output = nullptr, int numRet = 0);
 
+  // 调用lua函数
+  bool callLuaFunction(int64_t* func, LuaValueArray* input = nullptr,
+                       LuaValueArray* output = nullptr, int numRet = 0);
   // 执行lua代码
   void executeLuaCode(const char* luaCode);
 
