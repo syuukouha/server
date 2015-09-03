@@ -72,6 +72,6 @@ void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
 void TcpConnection::handleWrite(const ErrorCode& error, size_t bytesTransferred)
 {
   if (_writeCb) {
-    _writeCb(error, bytesTransferred);
+    _writeCb(shared_from_this(), error, bytesTransferred);
   }
 }
