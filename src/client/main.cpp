@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <boost/bind.hpp>
 #include "common/network/TcpConnection.h"
 #include <unistd.h>
-void onConnect(const ErrorCode& err, const TcpConnPtr& conn)
+void onConnect(const ErrorCode& err, TcpConnPtr conn)
 {
   if (!err) {
     std::cout << "连接建立成功！！！！！" << std::endl;
@@ -43,7 +43,7 @@ void onConnect(const ErrorCode& err, const TcpConnPtr& conn)
   }
 }
 
-void handleWrite(const ErrorCode& err, size_t bytes)
+void handleWrite(const TcpConnPtr& conn, const ErrorCode& err, size_t bytes)
 {
   if (err) {
     std::cout << "发送数据失败";
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
   TcpClient client(ioService, ip, 9999,
                    boost::bind(onConnect, _1, _2));
   client.setParseCallback(boost::bind(handleParse, _1, _2, _3));
-  client.setWriteCallback(boost::bind(handleWrite, _1, _2));
+  client.setWriteCallback(boost::bind(handleWrite, _1, _2, _3));
   client.connect();
   ioService.run();
   return 0;

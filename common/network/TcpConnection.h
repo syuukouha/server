@@ -35,10 +35,11 @@ class TcpConnection : public boost::enable_shared_from_this<TcpConnection>
 enum {kRecvBuffSize = 32 * 1024/*接收缓存大小*/,};
 public:
   typedef boost::shared_ptr<TcpConnection> TcpConnPtr;
-  typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  ConnectionCallback;
+  typedef boost::function<void (const ErrorCode&, TcpConnPtr)>  ConnectionCallback;
   typedef boost::function<void (const ErrorCode&, const TcpConnPtr& conn)>  CloseCallback;
   typedef boost::function<void (const ErrorCode&)> ConnectCallback; // asio自带的callback
-  typedef boost::function<bool (const TcpConnPtr& conn, const char*, size_t)> ParseCallback;
+  typedef boost::function<bool (const TcpConnPtr&, const char*, size_t)> ParseCallback;
+  typedef boost::function<void (const TcpConnPtr&, const ErrorCode&, size_t)> WriteCallback;
 
   TcpConnection(IoService& ioService) : _socket(ioService), _userData(nullptr)
   {
@@ -52,7 +53,6 @@ public:
   Socket& socket() { return _socket; }
 
   void setWriteCallback(WriteCallback wcb) { _writeCb = wcb; }
-  void setReadCallback(ReadCallback rcb) { _readCb = rcb; }
   void setConnectCallback(ConnectionCallback ccb) { _connectCb = ccb; }
   void setCloseCallback(CloseCallback clcb) { _closeCb = clcb; }
   void setParseCallback(ParseCallback pcb) { _parseCb = pcb; }
@@ -98,7 +98,6 @@ private:
   Socket                _socket;
   RecvBuff              _recvBuf;
   WriteCallback         _writeCb;
-  ReadCallback          _readCb;
   ConnectionCallback    _connectCb;
   CloseCallback         _closeCb;
   ParseCallback         _parseCb;

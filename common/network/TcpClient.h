@@ -34,7 +34,8 @@ class TcpClient : public boost::noncopyable
 enum {eState_NotConnected, eState_Connecting, eState_Connected, eState_Quit,};
 public:
   typedef TcpConnection::ConnectionCallback ConnectionCallback;
-  typedef TcpConnection::ParseCallback ParseCallback;
+  typedef TcpConnection::ParseCallback      ParseCallback;
+  typedef TcpConnection::WriteCallback      WriteCallback;
 
   TcpClient(IoService& ioService, std::string ip, int port, ConnectionCallback cb)
     : _conn(new TcpConnection(ioService)), _state(eState_NotConnected),
@@ -47,8 +48,6 @@ public:
 
   // 读完成回调
   void setParseCallback(ParseCallback pcb) { _conn->setParseCallback(pcb); }
-  // 暂时不使用
-  void setReadCallback(ReadCallback rcb) { _conn->setReadCallback(rcb); }
   // 写完成回调
   void setWriteCallback(WriteCallback wcb) { _conn->setWriteCallback(wcb); }
 

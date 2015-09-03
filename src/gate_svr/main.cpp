@@ -40,7 +40,7 @@ void handleRead(const ErrorCode& err, size_t bytes)
   LOG(ERROR) << "read " << bytes << " data";
 } 
 
-void handleWrite(const ErrorCode& err, size_t bytes)
+void handleWrite(const TcpConnPtr& conn, const ErrorCode& err, size_t bytes)
 {
   LOG(ERROR) << "write " << bytes << " data";
 }
@@ -62,11 +62,11 @@ bool handleParse(const TcpConnPtr& conn, const char* data, size_t sz)
   return true;
 }
 
-void handleNewConn(const ErrorCode& err, const TcpConnPtr& conn) 
+void handleNewConn(const ErrorCode& err, TcpConnPtr conn) 
 {
   LOG(ERROR) << "New Connection Comes in!!!";
   conn->setCloseCallback(boost::bind(handleClose, _1, _2));
-  conn->setWriteCallback(boost::bind(handleWrite, _1, _2));
+  conn->setWriteCallback(boost::bind(handleWrite, _1, _2, _3));
   //conn->setReadCallback(boost::bind(handleRead, _1, _2));
   conn->setParseCallback(boost::bind(handleParse, _1, _2, _3));
 }

@@ -35,15 +35,14 @@ class TcpServer : boost::noncopyable
 {
 public:
   typedef TcpConnection::ConnectionCallback ConnectionCallback;
-  typedef TcpConnection::CloseCallback CloseCallback;
+  typedef TcpConnection::CloseCallback      CloseCallback;
+  typedef TcpConnection::WriteCallback      WriteCallback;
 
   TcpServer(IoService& ioService, std::string& ip, int port, ConnectionCallback cb)
     : _ioService(ioService),
       _ep(boost::asio::ip::address::from_string(ip), port),
-      _acceptor(ioService, _ep), _connectCb(cb)
+      _acceptor(ioService, _ep), _connectCb(cb), _userData(nullptr)
   {
-    _closeCb = boost::bind(&TcpServer::handleDisconnect, this, _1, _2);
-    _nextConnId = 0;
     _acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     _acceptor.set_option(boost::asio::ip::tcp::socket::keep_alive(true));
     _acceptor.set_option(boost::asio::ip::tcp::no_delay(true));
@@ -62,6 +61,8 @@ public:
 
   void stop() { _acceptor.close(); }
 
+  void setUserData(void* data) { _userData = data; }
+  void* getUserData() { return _userData; }
 private:
   void handleAcceptor(TcpConnPtr& conn, const ErrorCode& err) 
   {
@@ -70,22 +71,14 @@ private:
       return;  
     }
 
-    conn->setConnId(_nextConnId);
-    _connMaps[_nextConnId] = conn;
     conn->setConnectCallback(_connectCb);
-    conn->setCloseCallback(_closeCb);
+    conn->setUserData(_userData);
     conn->start(); // 发一个读请求
     conn.reset(new TcpConnection(_ioService));
     listen(conn);
   }
 
   void handleDisconnect(const ErrorCode& err,const TcpConnPtr& conn) {
-    uint64_t id = conn->getConnId();
-    ConnIter it = _connMaps.find(id);
-    if (it == _connMaps.end()) {
-      return;
-    }
-    _connMaps.erase(it);
   }
 private:
   typedef __gnu_cxx::hash_map<uint64_t, TcpConnPtr> ConnMaps;
@@ -95,9 +88,7 @@ private:
   EndPoint           _ep;
   Acceptor           _acceptor;
   ConnectionCallback _connectCb;
-  CloseCallback      _closeCb;
-  uint64_t           _nextConnId; // 下一个连接的id
-  ConnMaps           _connMaps;
+  void*              _userData;
 };
 
 #endif // __TCPSERVER__H__
