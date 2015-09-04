@@ -5,6 +5,7 @@ cc_library(
         "LuaEngine.cpp",
         'lfs.c',
         'LuaNetModule.cpp',
+        'LuaSysModule.cpp',
     ],
     deps = [
         "//thirdparty/lua-5.1:lua",
@@ -26,6 +27,18 @@ cc_binary(
         "#pthread",
         "#boost_system",
         '//common/network:network'
+    ],
+    incs = ["../../thirdparty/lua-5.1", "../logger", "../../thirdparty/glog-0.3.3"],
+)
+
+cc_binary(
+    name = "ELua",
+    srcs = ["ELua.cpp"],
+    deps = [
+        ":luaengine",
+        "#pthread",
+        "#boost_system",
+        "//common/network:network",
     ],
     incs = ["../../thirdparty/lua-5.1", "../logger", "../../thirdparty/glog-0.3.3"],
 )

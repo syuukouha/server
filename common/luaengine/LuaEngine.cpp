@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "LuaEngine.h"
 #include "Logger.h"
 #include "lfs.h"
+#include "LuaNetModule.h"
+#include "LuaSysModule.h"
 // lua错误处理函数
 static int luaErrorFunc(lua_State* L)
 {
@@ -65,6 +67,8 @@ LuaEngine::LuaEngine(): _L(luaL_newstate())
 {
   luaL_openlibs(_L);
   luaopen_lfs(_L);
+  openLuaNetModule();
+  openLuaSysModule();
 }
 
 LuaEngine::~LuaEngine()

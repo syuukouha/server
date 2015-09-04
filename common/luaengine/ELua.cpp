@@ -1,5 +1,5 @@
 /**
-FileName : INetPacket.h
+FileName : ELua.cpp
 Author   : rick <rick.han@yahoo.com>
 
 copyright (c) <2015> <rick>
@@ -22,24 +22,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#ifndef __INETPACKET__H__
-#define __INETPACKET__H__
-#include "AsioCommon.h"
 
-struct INetPacket {
-  virtual ~INetPacket() {};
+#include "LuaEngine.h"
+#include <iostream>
 
-  /// 解析数据包
-  virtual ssize_t deserialize(const char* data, size_t sz) = 0;
+int main(int argc, char** argv) 
+{
+  if (argc < 2) {
+    std::cout << "too few arguments!!!!!" << std::endl;
+    return 0;
+  }
+  LuaEngine& ins = LuaEngine::instance();
+  lua_State* L   = ins.state();
+  lua_getglobal(L, "Sys");
+  if (lua_type(L, -1) != LUA_TTABLE) {
+    std::cout << "sys module not found!!!!" << std::endl;
+    return 0;
+  }
 
-  /// 数据打包
-  virtual bool serialize(SendBuffPtr& buff) = 0;
+  // Sys.Argc
+  lua_pushnumber(L, argc);
+  lua_setfield(L, -2, "Argc"); 
 
-  /// 数据是否已准备好
-  virtual bool prepared() = 0;
+  // Sys.Argv
+  lua_newtable(L);
+  for (int i=0; i<argc; ++i) {
+    lua_pushstring(L, argv[i]);
+    lua_rawseti(L, -2, i);
+  }
+  lua_setfield(L, -2, "Argv");
 
-  /// 重置
-  virtual void reset() = 0;
-};
-
-#endif // __INETPACKET__H__
+  ins.loadFile(argv[1]);
+  return 0;
+}

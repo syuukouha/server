@@ -63,16 +63,28 @@ void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
   }
 
   if (_netPacket) {
-    ssize_t packetSize = _netPacket->deserialize(_recvBuf.data(), bytesTransferred);
-    if (packetSize > 0) {
-      if (_packetCb) {
-        _packetCb(shared_from_this());
+    const char* pData = _recvBuf.data();
+    ssize_t sz = bytesTransferred;
+    while (true) {
+      ssize_t readSize = _netPacket->deserialize(pData, sz);
+      if (readSize < 0) {
+        close();
+        return;
+      } else if (readSize == 0) {
+        break;
+      } else {
+        if (_netPacket->prepared()) {
+          _packetCb(shared_from_this());
+        }
+        _netPacket->reset();
+        if (readSize < static_cast<ssize_t>(sz)) {
+          pData += readSize;
+          sz -= readSize;
+        }
       }
-      asyncRead();
-    } else if (packetSize < 0) {
-      close();
-    } else {
     }
+
+    asyncRead();
   }
 }
 

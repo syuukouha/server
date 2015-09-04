@@ -25,68 +25,144 @@ THE SOFTWARE.
 #ifndef __LUANETPACKET__H__
 #define __LUANETPACKET__H__
 #include "INetPacket.h"
+#include <sstream>
+#include <boost/array.hpp>
 
+/// 消息包格式：
+/// 总长(3bytes) + 函数名长(1byte) + 函数名(0-255bytes) + 消息体(nbytes)
 struct LuaNetPacket : public INetPacket 
 {
 public:
-  enum {kMaxPacketLen = 1024 * 32, };
+  enum {kMaxPacketLen = 1024 * 32, kHeadLen = sizeof(uint32_t),};
+  enum PacketState {eState_ParseHead = 0, eState_ParseData, eState_ReadComplete,};
+  typedef boost::array<char, kHeadLen> PacketHeadBuffer;
+
+  LuaNetPacket(): _data(std::ios_base::in|std::ios_base::out|std::ios_base::binary),
+    _state(eState_ParseHead), _needSize(kHeadLen)
+  {
+  }
+
   ///////////////////////////////////////////////////////////
   /////////////////////// INetPacket ///////////////////////
   // 序列化
   bool serialize(SendBuffPtr& buff) {
-    if (_packetLen > kMaxPacketLen || _packetLen > _methodLen) {
-      return false;
-    }
-
-    std::ostream os(buff.get());
-    os.write(reinterpret_cast<char*>(&_packetLen), sizeof(_packetLen));
-    os.write(reinterpret_cast<char*>(&_methodLen), sizeof(_methodLen));
-    os.write(_method, _methodLen);
-    os.write(_content, _packetLen - _methodLen);
     return true;
   }
 
   // 反序列化
   ssize_t deserialize(const char* data, size_t sz) {
-    static uint32_t packetHeadLen = sizeof(_packetLen)
-                                    + sizeof(_methodLen);
-    if (sz < packetHeadLen) {
-      return 0;
+    ssize_t readSize = 0;
+    while (true) {
+      switch (_state) {
+      case eState_ParseHead:
+        if (sz >= _needSize) {
+          size_t startPos = _head.size() - _needSize;
+          for (size_t i=0; i<_needSize; ++i) {
+            _head[i+startPos] = data[i];
+          }
+          data += _needSize;
+          sz -= _needSize;
+          readSize += _needSize;
+          _needSize = packetLen();
+          _state = eState_ParseData;
+          uint8_t mlen = methodLen();
+          if (_needSize >= kMaxPacketLen || (_needSize < (mlen+sizeof(uint32_t))
+                      || mlen == 0)) {
+            return -1; // 错误的包，断开连接
+          }
+        } else {
+          size_t needLen = _head.size() - _needSize;
+          for (size_t i=0; i<sz; ++i) {
+            _head[needLen+i] = data[i];
+          }
+          readSize += sz;
+          return readSize;
+        }
+        break;
+      case eState_ParseData:
+        if (sz >= _needSize) {
+          _data.write(data, _needSize);
+          readSize += _needSize;
+          _state = eState_ReadComplete;
+          return readSize;
+        } else {
+          _data.write(data, sz);
+          readSize += sz;
+          return readSize;
+        }
+        break;
+      default:
+        return readSize;
+      }
     }
 
-    _packetLen = *reinterpret_cast<const uint32_t*>(data);
-    _methodLen = *reinterpret_cast<const uint8_t*>(data + sizeof(_packetLen));
-    if (_packetLen < _methodLen) {
-      return -1;
-    }
     return 0;
   }
 
-public:
-  inline uint32_t packetLen()   { return _packetLen; }
-  inline uint8_t  methodLen()   { return _methodLen; }
-  inline char*    method()      { return _method; }
-  inline char*    content()     { return _content; }
-
-  void makePacket(char* method, char* content, size_t contentLen) {
-    _method     = method;
-    _content    = content;
-    _packetLen  = contentLen;
-    _methodLen  = strlen(method);
-    _packetLen  += _methodLen;
-  }
-
+  bool prepared() { return _state == eState_ReadComplete; }
   void reset() {
-    _method     = nullptr;
-    _content    = nullptr;
-    _packetLen  = 0;
-    _methodLen  = 0;
+    _state    = eState_ParseHead;
+    _needSize = kHeadLen;
+    for (size_t i=0; i<_head.size(); ++i) {
+      _head[i] = 0;
+    }
+    _data.str("");
+    _data.clear();
   }
+public:
+  // 包总长
+  inline uint32_t packetLen()   
+  {
+    uint32_t data = *reinterpret_cast<const uint32_t*>(_head.data());
+    return data >> 8;
+  }
+
+  // 函数名长
+  inline uint8_t methodLen()   
+  {
+    uint32_t data = *reinterpret_cast<const uint32_t*>(_head.data());
+    return data & 0xFF;
+  }
+
+  inline std::string content()
+  {
+    return _data.str();
+  } 
+
+  SendBuffPtr makePacket(const char* method, const char* content,
+                         size_t contentLen) 
+  {
+    if (method == nullptr || content == nullptr) 
+    {
+      boost::asio::streambuf* p = nullptr;
+      return SendBuffPtr(p);
+    }
+
+    uint32_t len = strlen(method);
+    if (len >= 0xFF || (len+contentLen+kHeadLen) >= kMaxPacketLen) {
+      boost::asio::streambuf* p = nullptr;
+      return SendBuffPtr(p);
+    }
+
+    uint32_t totalLen = len + contentLen + kHeadLen;
+    totalLen = totalLen << 8;
+    totalLen += len;
+    std::ostringstream output;
+    output.write(reinterpret_cast<const char*>(&totalLen), sizeof(totalLen));
+    output.write(method, len);
+    output.write(content, contentLen);
+    SendBuffPtr buf(new boost::asio::streambuf());
+    std::ostream os(buf.get());
+    std::string data = output.str();
+    os.write(data.data(), data.size());
+    return buf;
+  }
+
 private:
-  uint32_t      _packetLen; // 包总长
-  uint8_t       _methodLen; // 函数名长
-  char*         _method;    // 函数名
-  char*         _content;   // 包体
+  PacketHeadBuffer  _head;
+  std::stringstream _data;
+  uint32_t          _state;
+  uint32_t          _needSize;
 };
 
 #endif // __LUANETPACKET__H__

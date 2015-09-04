@@ -1,5 +1,6 @@
-/**
-FileName : INetPacket.h
+#!/bin/ELua
+--[[
+FileName : execute
 Author   : rick <rick.han@yahoo.com>
 
 copyright (c) <2015> <rick>
@@ -21,25 +22,17 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-**/
-#ifndef __INETPACKET__H__
-#define __INETPACKET__H__
-#include "AsioCommon.h"
+]]--
 
-struct INetPacket {
-  virtual ~INetPacket() {};
+if os.getenv("SCRIPT_ROOT") then
+    lfs.chdir(os.getenv("SCRIPT_ROOT")) 
+end
 
-  /// 解析数据包
-  virtual ssize_t deserialize(const char* data, size_t sz) = 0;
+local currDir = lfs.currentdir()
+local path = currDir .. "/?.lua;" .. currDir .. "/../common/?.lua"
 
-  /// 数据打包
-  virtual bool serialize(SendBuffPtr& buff) = 0;
+package.path = path .. package.path
 
-  /// 数据是否已准备好
-  virtual bool prepared() = 0;
+print ('argc=' .. Sys.Argc)
 
-  /// 重置
-  virtual void reset() = 0;
-};
-
-#endif // __INETPACKET__H__
+require 'class'

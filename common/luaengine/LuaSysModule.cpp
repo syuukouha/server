@@ -1,5 +1,5 @@
 /**
-FileName : INetPacket.h
+FileName : LuaSysModule.cpp
 Author   : rick <rick.han@yahoo.com>
 
 copyright (c) <2015> <rick>
@@ -22,24 +22,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#ifndef __INETPACKET__H__
-#define __INETPACKET__H__
-#include "AsioCommon.h"
-
-struct INetPacket {
-  virtual ~INetPacket() {};
-
-  /// 解析数据包
-  virtual ssize_t deserialize(const char* data, size_t sz) = 0;
-
-  /// 数据打包
-  virtual bool serialize(SendBuffPtr& buff) = 0;
-
-  /// 数据是否已准备好
-  virtual bool prepared() = 0;
-
-  /// 重置
-  virtual void reset() = 0;
+#include "LuaSysModule.h"
+#include "LuaEngine.h"
+const static luaL_Reg sysFuncs[] = 
+{
+  {NULL, NULL},
 };
 
-#endif // __INETPACKET__H__
+void openLuaSysModule() 
+{
+  LuaEngine& ins = LuaEngine::instance();
+  ins.registLib("Sys", sysFuncs);
+}

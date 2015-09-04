@@ -41,7 +41,7 @@ static int setMsgCallback(lua_State*);
 static int setCloseCallback(lua_State*);
 static int setWriteCallback(lua_State*);
 static int close(lua_State*);
-const static luaL_Reg netmeta_funcs[] =
+const static luaL_Reg netMetaFuncs[] =
 {
     {"Connect", connect},
     {"Disconnect", disconnect},
@@ -60,7 +60,7 @@ static int start(lua_State*);
 static int stop(lua_State*);
 static int send(lua_State*);
 static int closeConn(lua_State*);
-const static luaL_Reg net_funcs[] =
+const static luaL_Reg netFuncs[] =
 {
   {"NewTcpClient", newTcpClient},
   {"NewTcpServer", newTcpServer},
@@ -79,8 +79,8 @@ void openLuaNetModule()
   lua_pushstring(L, "__index");
   lua_pushvalue(L, -2);
   lua_pushvalue(L, -3);
-  luaL_register(L, NULL, netmeta_funcs);
-  luaL_register(L, "Net", net_funcs);
+  luaL_register(L, NULL, netMetaFuncs);
+  luaL_register(L, "Net", netFuncs);
 }
 
 

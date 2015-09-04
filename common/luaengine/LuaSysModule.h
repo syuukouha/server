@@ -1,5 +1,5 @@
 /**
-FileName : INetPacket.h
+FileName : LuaSysModule.h
 Author   : rick <rick.han@yahoo.com>
 
 copyright (c) <2015> <rick>
@@ -22,24 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
-#ifndef __INETPACKET__H__
-#define __INETPACKET__H__
-#include "AsioCommon.h"
+#ifndef __LUASYSMODULE__H__
+#define __LUASYSMODULE__H__
 
-struct INetPacket {
-  virtual ~INetPacket() {};
+void openLuaSysModule();
 
-  /// 解析数据包
-  virtual ssize_t deserialize(const char* data, size_t sz) = 0;
-
-  /// 数据打包
-  virtual bool serialize(SendBuffPtr& buff) = 0;
-
-  /// 数据是否已准备好
-  virtual bool prepared() = 0;
-
-  /// 重置
-  virtual void reset() = 0;
-};
-
-#endif // __INETPACKET__H__
+#endif // __LUASYSMODULE__H__
