@@ -24,8 +24,14 @@ THE SOFTWARE.
 **/
 #include "LuaSysModule.h"
 #include "LuaEngine.h"
+
+static int reserved(lua_State* L) 
+{
+  return 0;
+}
 const static luaL_Reg sysFuncs[] = 
 {
+  {"reserved", reserved},
   {NULL, NULL},
 };
 

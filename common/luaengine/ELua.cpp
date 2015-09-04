@@ -33,6 +33,7 @@ int main(int argc, char** argv)
     return 0;
   }
   LuaEngine& ins = LuaEngine::instance();
+  ins.openLibs();
   lua_State* L   = ins.state();
   lua_getglobal(L, "Sys");
   if (lua_type(L, -1) != LUA_TTABLE) {

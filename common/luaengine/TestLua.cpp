@@ -43,7 +43,7 @@ static const luaL_Reg funcs[] =
 int main(int argc, char** argv)
 {
   LuaEngine& ins = LuaEngine::instance();
-  openLuaNetModule();
+  ins.openLibs();
   ins.registLib("Test", funcs);
   ins.loadFile("main.lua");
   ins.callLuaFunction("CalledByCpp");

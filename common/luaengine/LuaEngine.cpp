@@ -65,14 +65,18 @@ static int luaErrorFunc(lua_State* L)
 
 LuaEngine::LuaEngine(): _L(luaL_newstate())
 {
-  luaL_openlibs(_L);
-  luaopen_lfs(_L);
-  openLuaNetModule();
-  openLuaSysModule();
 }
 
 LuaEngine::~LuaEngine()
 {
+}
+
+void LuaEngine::openLibs() 
+{
+  luaL_openlibs(_L);
+  luaopen_lfs(_L);
+  openLuaNetModule();
+  openLuaSysModule();
 }
 
 void LuaEngine::addSearchPath(const char* path)

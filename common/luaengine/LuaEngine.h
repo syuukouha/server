@@ -38,6 +38,8 @@ public:
 
   lua_State* state() { return _L; }
 
+  void openLibs();
+
   // 添加路径
   void addSearchPath(const char* path);
 
