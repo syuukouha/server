@@ -110,6 +110,7 @@ public:
      */
     static const LuaValue stringValue(const char* stringValue);
     
+    static const LuaValue stringValue(const char* stringValue, int sz);
     /**
      * Construct a LuaValue object by a std::string object.
      *
@@ -287,6 +288,8 @@ public:
             return LuaValue::floatValue(lua_tonumber(L, idx));
         case LUA_TSTRING:
             return LuaValue::stringValue(lua_tostring(L, idx));
+        case LUA_TUSERDATA:
+            return LuaValue::ccobjectValue(lua_touserdata(L, idx));
         default:
             break;
         }

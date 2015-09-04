@@ -70,7 +70,8 @@ public:
     os.write(content.data(), content.size());
     asyncWrite(buf);
   }
-  void asyncWritePacket() 
+  
+  /*void asyncWritePacket() 
   {
     if (_netPacket) {
       SendBuffPtr buf(new boost::asio::streambuf());
@@ -78,7 +79,7 @@ public:
         asyncWrite(buf);
       }
     }
-  }
+  }*/
   void asyncConnect(const EndPoint& endpoint, ConnectCallback cb) 
   {
     _socket.async_connect(endpoint, cb);

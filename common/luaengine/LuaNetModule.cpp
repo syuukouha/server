@@ -170,15 +170,6 @@ static int stop(lua_State* L)
   return 0;
 }
 
-static int send(lua_State* L)
-{
-  return 1;
-}
-
-static int closeConn(lua_State* L) 
-{
-  return 0;
-}
 #define CHECK_NET_META\
   LuaNetData* data= static_cast<LuaNetData*>(luaL_checkudata(L, 1, LUANET_META));\
   if (data == nullptr || data->_extra == nullptr) {\
@@ -333,9 +324,20 @@ void handlePacket(const TcpConnPtr& conn)
     return;
   }
   uint64_t connId = conn->getConnId();
-  LuaEngine& ins = LuaEngine::instance();
+  LuaNetPacket* packet = static_cast<LuaNetPacket*>(conn->getNetPacket());
+  if (packet == nullptr) {
+    return;
+  }
+
+  std::string msg = packet->content();
+  const char* data= msg.data();
+  uint8_t mlen    = packet->methodLen();
+  LuaEngine& ins  = LuaEngine::instance();
+
   LuaValueArray inputArgs;
   inputArgs.push_back(LuaValue::ccobjectValue(reinterpret_cast<void*>(connId)));
+  inputArgs.push_back(LuaValue::stringValue(data, mlen));
+  inputArgs.push_back(LuaValue::stringValue(data+mlen));
   ins.callLuaFunction(&(luaData->_msgFunc), &inputArgs);
 }
 
@@ -377,4 +379,51 @@ void handleConnected(const ErrorCode& err, TcpConnPtr conn)
     _gConnMaps[_nextConnId] = conn;
   }
   ins.callLuaFunction(&(data->_connectFunc), &inputArgs);
+}
+
+static int send(lua_State* L)
+{
+  int args = lua_gettop(L);
+  if (args < 4) {
+    return 0;
+  }
+  uint64_t connId = reinterpret_cast<uint64_t>(lua_touserdata(L, 1));
+  ConnIter it = _gConnMaps.find(connId);
+  if (it != _gConnMaps.end()) {
+    LuaNetPacket* packet = static_cast<LuaNetPacket*>(it->second->getNetPacket());
+    if (packet == nullptr) {
+      return 0;
+    }
+
+    const char* methodName = lua_tostring(L, 2);
+    if (methodName == nullptr) {
+      return 0;
+    }
+
+    const char* content = lua_tostring(L, 3);
+    if (content == nullptr) {
+      return 0;
+    }
+
+    SendBuffPtr msg = packet->makePacket(methodName, content,
+                                         strlen(content));
+    if (msg.get() == nullptr) {
+      return 0;
+    }
+    it->second->asyncWrite(msg);
+    lua_pushboolean(L, true);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int closeConn(lua_State* L) 
+{
+  uint64_t connId = reinterpret_cast<uint64_t>(lua_touserdata(L, 1));
+  ConnIter it = _gConnMaps.find(connId);
+  if (it != _gConnMaps.end()) {
+    it->second->close();
+  }
+  return 0;
 }

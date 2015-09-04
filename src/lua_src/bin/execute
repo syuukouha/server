@@ -29,10 +29,21 @@ if os.getenv("SCRIPT_ROOT") then
 end
 
 local currDir = lfs.currentdir()
-local path = currDir .. "/?.lua;" .. currDir .. "/../common/?.lua"
+local path = currDir .. "/?.lua;"
 
 package.path = path .. package.path
 
-print ('argc=' .. Sys.Argc)
 
-require 'class'
+function loadDir(dir)
+    package.path = dir .. "/?.lua;" .. package.path
+    for file in lfs.dir(dir) do
+        local pos = string.find(file, "lua")
+        if pos ~= nil then
+            local name = string.sub(file, 0, pos-2)
+            print (name)
+            require(name)
+        end
+    end
+end
+
+loadDir(currDir .. '/../common')

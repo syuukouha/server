@@ -58,6 +58,14 @@ const LuaValue LuaValue::stringValue(const char* stringValue)
     return value;
 }
 
+const LuaValue LuaValue::stringValue(const char* stringValue, int sz) 
+{
+    LuaValue value;
+    value._type = LuaValueTypeString;
+    value._field.stringValue = new std::string(stringValue, sz);
+    return value;
+}
+
 const LuaValue LuaValue::stringValue(const std::string& stringValue)
 {
     LuaValue value;
