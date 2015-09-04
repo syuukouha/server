@@ -61,10 +61,17 @@ void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
     close();
     return;
   }
-  if (_parseCb) {
-    bool readMore = _parseCb(shared_from_this(), _recvBuf.data(), bytesTransferred);
-    if (readMore) {
+
+  if (_netPacket) {
+    ssize_t packetSize = _netPacket->deserialize(_recvBuf.data(), bytesTransferred);
+    if (packetSize > 0) {
+      if (_packetCb) {
+        _packetCb(shared_from_this());
+      }
       asyncRead();
+    } else if (packetSize < 0) {
+      close();
+    } else {
     }
   }
 }

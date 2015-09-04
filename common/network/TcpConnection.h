@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/array.hpp>
 #include "AsioCommon.h"
+#include "INetPacket.h"
 
 class TcpConnection : public boost::enable_shared_from_this<TcpConnection>
 {
@@ -40,14 +41,17 @@ public:
   typedef boost::function<void (const ErrorCode&)> ConnectCallback; // asio自带的callback
   typedef boost::function<bool (const TcpConnPtr&, const char*, size_t)> ParseCallback;
   typedef boost::function<void (const TcpConnPtr&, const ErrorCode&, size_t)> WriteCallback;
+  typedef boost::function<void (const TcpConnPtr&)> PacketCallback;
 
-  TcpConnection(IoService& ioService) : _socket(ioService), _userData(nullptr)
+  TcpConnection(IoService& ioService) : _socket(ioService), _userData(nullptr),
+    _netPacket(nullptr)
   {
   }
 
   ~TcpConnection()
   {
     close();
+    if (_netPacket) delete _netPacket;
   }
 
   Socket& socket() { return _socket; }
@@ -56,7 +60,7 @@ public:
   void setConnectCallback(ConnectionCallback ccb) { _connectCb = ccb; }
   void setCloseCallback(CloseCallback clcb) { _closeCb = clcb; }
   void setParseCallback(ParseCallback pcb) { _parseCb = pcb; }
-
+  void setPacketCallback(PacketCallback pcb) { _packetCb = pcb; }
   void asyncRead();
   void asyncWrite(SendBuffPtr buf);
   void asyncWrite(const std::string& content)
@@ -65,6 +69,15 @@ public:
     std::ostream os(buf.get());
     os.write(content.data(), content.size());
     asyncWrite(buf);
+  }
+  void asyncWritePacket() 
+  {
+    if (_netPacket) {
+      SendBuffPtr buf(new boost::asio::streambuf());
+      if (_netPacket->serialize(buf)) {
+        asyncWrite(buf);
+      }
+    }
   }
   void asyncConnect(const EndPoint& endpoint, ConnectCallback cb) 
   {
@@ -88,6 +101,9 @@ public:
 
   void* getUserData() { return _userData; }
   void setUserData(void* data) { _userData = data; }
+
+  INetPacket* getNetPacket() { return _netPacket; }
+  void setNetPacket(INetPacket* packet) { _netPacket = packet; }
 private:
   void handleRead(const ErrorCode& error, size_t bytesTransferred);
   void handleWrite(const ErrorCode& error, size_t bytesTransferred);
@@ -101,8 +117,10 @@ private:
   ConnectionCallback    _connectCb;
   CloseCallback         _closeCb;
   ParseCallback         _parseCb;
+  PacketCallback        _packetCb;
   uint64_t              _connId;
   void*                 _userData;
+  INetPacket*           _netPacket;
 };
 
 typedef boost::shared_ptr<TcpConnection> TcpConnPtr;

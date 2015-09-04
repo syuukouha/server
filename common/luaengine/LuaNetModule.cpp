@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "TcpServer.h"
 #include "NetworkManager.h"
 #include "Logger.h"
+#include "LuaNetPacket.h"
 #include <ext/hash_map>
 #define LUANET_META "__lua__net__meta__"
 #define LUA_FUNC_NAME_MAX_LEN 200
@@ -324,10 +325,18 @@ void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
   ins.callLuaFunction(&(data->_closeFunc), &inputArgs);
 }
 
-// 包解析
-bool handleRead(const TcpConnPtr& conn, const char* data, size_t sz) 
+// 收到一个完整的包
+void handlePacket(const TcpConnPtr& conn) 
 {
-  return true;
+  LuaNetData* luaData = static_cast<LuaNetData*>(conn->getUserData());
+  if (luaData == nullptr) {
+    return;
+  }
+  uint64_t connId = conn->getConnId();
+  LuaEngine& ins = LuaEngine::instance();
+  LuaValueArray inputArgs;
+  inputArgs.push_back(LuaValue::ccobjectValue(reinterpret_cast<void*>(connId)));
+  ins.callLuaFunction(&(luaData->_msgFunc), &inputArgs);
 }
 
 void handleWrite(const TcpConnPtr& conn, const ErrorCode& err, size_t sz)
@@ -359,9 +368,10 @@ void handleConnected(const ErrorCode& err, TcpConnPtr conn)
   } else {
     ++_nextConnId;
     conn->setConnId(_nextConnId);
+    conn->setNetPacket(new LuaNetPacket());
     conn->setCloseCallback(boost::bind(handleClose, _1, _2));
     conn->setWriteCallback(boost::bind(handleWrite, _1, _2, _3));
-    conn->setParseCallback(boost::bind(handleRead, _1, _2, _3));
+    conn->setPacketCallback(boost::bind(handlePacket, _1));
     inputArgs.push_back(LuaValue::booleanValue(true));
     inputArgs.push_back(LuaValue::ccobjectValue(reinterpret_cast<void*>(_nextConnId)));
     _gConnMaps[_nextConnId] = conn;
