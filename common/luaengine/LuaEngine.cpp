@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "lfs.h"
 #include "LuaNetModule.h"
 #include "LuaSysModule.h"
+#include "LuaLogModule.h"
 // lua错误处理函数
 static int luaErrorFunc(lua_State* L)
 {
@@ -77,6 +78,7 @@ void LuaEngine::openLibs()
   luaopen_lfs(_L);
   openLuaNetModule();
   openLuaSysModule();
+  openLuaLogModule();
 }
 
 void LuaEngine::addSearchPath(const char* path)

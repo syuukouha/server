@@ -51,17 +51,21 @@ function TcpServer:startListen()
     if self._server == nil then
         error('failed to create tcp server')
     end
-    
+
+    local mt = getmetatable(self._server)
     if self._connectFunc ~= nil then
-        self._server:SetConnectCallback(self._connectFunc)
+        mt.SetConnectCallback(self._server, self._connectFunc)
+        --self._server:SetConnectCallback(self._connectFunc)
     end
 
     if self._closeFunc ~= nil then
-        self._server:SetCloseCallback(self._closeFunc)
+        mt.SetCloseCallback(self._server, self._closeFunc)
+        --self._server:SetCloseCallback(self._closeFunc)
     end
 
     if self._msgFunc ~= nil then
-        self._server:SetMsgCallback(self._msgFunc)
+        mt.SetMsgCallback(self._server, self._msgFunc)
+        --self._server:SetMsgCallback(self._msgFunc)
     end
 end
 

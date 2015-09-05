@@ -224,7 +224,7 @@ static int isconnected(lua_State* L)
   }\
   funcref = 0;\
   const char* dot = strchr(luaFunc, '.');\
-  if (dot != nullptr) {\
+  if (dot == nullptr) {\
     lua_pushlightuserdata(L, (void*)&(funcref));\
     lua_getglobal(L, luaFunc);\
     if (lua_type(L, -1) != LUA_TFUNCTION) {\
@@ -310,6 +310,7 @@ void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
   _gConnMaps.erase(it);
   LuaNetData* data = static_cast<LuaNetData*>(conn->getUserData());
   if (data == nullptr || data->_closeFunc == 0) {
+    LOG(ERROR) << "impossible";
     return;
   }
   LuaEngine& ins = LuaEngine::instance();
@@ -321,13 +322,16 @@ void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
 // 收到一个完整的包
 void handlePacket(const TcpConnPtr& conn) 
 {
+  LOG(ERROR) << "handle packet";
   LuaNetData* luaData = static_cast<LuaNetData*>(conn->getUserData());
   if (luaData == nullptr || luaData->_msgFunc == 0) {
+    LOG(ERROR) << "condition 1";
     return;
   }
   uint64_t connId = conn->getConnId();
   LuaNetPacket* packet = static_cast<LuaNetPacket*>(conn->getNetPacket());
   if (packet == nullptr) {
+    LOG(ERROR) << "condition 2";
     return;
   }
 
@@ -386,7 +390,7 @@ void handleConnected(const ErrorCode& err, TcpConnPtr conn)
 static int send(lua_State* L)
 {
   int args = lua_gettop(L);
-  if (args < 4) {
+  if (args < 3) {
     return 0;
   }
   uint64_t connId = reinterpret_cast<uint64_t>(lua_touserdata(L, 1));
@@ -412,6 +416,7 @@ static int send(lua_State* L)
     if (msg.get() == nullptr) {
       return 0;
     }
+
     it->second->asyncWrite(msg);
     lua_pushboolean(L, true);
     return 1;

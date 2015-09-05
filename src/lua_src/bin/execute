@@ -25,6 +25,7 @@ THE SOFTWARE.
 ]]--
 
 Config = {}
+Config.logRoot = '/log' -- 日志的根目录
 
 function usage()
     print [[
@@ -66,5 +67,8 @@ end
 loadDir(currDir .. '/common')
 
 Config.appRoot = currDir .. '/' .. Sys.Argv[2]
+logFileName = Config.logRoot .. '/' .. Sys.Argv[2]
+Log.InitGoogleLogging(logFileName)
 loadDir(Config.appRoot)
+Log.Info('starup')
 

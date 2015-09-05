@@ -35,7 +35,6 @@ TcpClient = {
 }
 
 function TcpClient:setConnectFunc(func)
-    print ('func called!!!!' .. func)
     self._connectFunc = func
 end
 
@@ -45,6 +44,12 @@ end
 
 function TcpClient:setMsgFunc(func)
     self._msgFunc = func
+end
+
+function TcpClient:printall()
+    local str = 'ip=' .. self._ip .. ' port=' .. self._port
+    str = str .. tostring(self._connectFunc)
+    print(str)
 end
 
 function TcpClient:startConnect()
@@ -58,18 +63,19 @@ function TcpClient:startConnect()
         error('no metatable found!')
     end
     print (self._ip .. " : " .. self._port)
-    print (self._connectFunc)
     if self._connectFunc ~= nil then
-        print ('dfsdf')
-        self._client:SetConnectCallback(self._connectFunc)
+        mt.SetConnectCallback(self._client, self._connectFunc)
+        --self._client:SetConnectCallback(self._connectFunc)
     end
 
     if self._closeFunc ~= nil then
-        self._client:SetCloseCallback(self._closeFunc)
+        mt.SetCloseCallback(self._client, self._closeFunc)
+        --self._client:SetCloseCallback(self._closeFunc)
     end
 
     if self._msgFunc ~= nil then
-        self._client:SetMsgCallback(self._msgFunc)
+        mt.SetMsgCallback(self._client, self._msgFunc)
+        --self._client:SetMsgCallback(self._msgFunc)
     end
 
     mt.Connect(self._client)
@@ -87,9 +93,5 @@ function createTcpClient(ip, port)
     c._ip   = ip
     c._port = port
 
-    local t = getmetatable(c)
-    for k,v in pairs(t) do
-        print (tostring(k) .. '=' .. tostring(v))
-    end
     return c
 end

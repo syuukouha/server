@@ -6,6 +6,7 @@ cc_library(
         'lfs.c',
         'LuaNetModule.cpp',
         'LuaSysModule.cpp',
+        'LuaLogModule.cpp',
     ],
     deps = [
         "//thirdparty/lua-5.1:lua",

@@ -23,7 +23,7 @@ THE SOFTWARE.
 **/
 #include "TcpConnection.h"
 #include <boost/bind.hpp>
-
+#include "Logger.h"
 void TcpConnection::asyncRead()
 {
   _socket.async_read_some(boost::asio::buffer(_recvBuf), 
@@ -80,6 +80,8 @@ void TcpConnection::handleRead(const ErrorCode& error, size_t bytesTransferred)
         if (readSize < static_cast<ssize_t>(sz)) {
           pData += readSize;
           sz -= readSize;
+        } else {
+          break;
         }
       }
     }

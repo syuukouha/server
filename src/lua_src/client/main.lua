@@ -31,6 +31,7 @@ function onConnected(connected, connId)
     if connected then
         print('connected!!')
         clientData.connId = connId
+        Net.Send(connId, "TestFunc", "FuncPrams", 1)
     else
         print('failed to connect')
     end
@@ -53,7 +54,6 @@ client:setMsgFunc('TestClient.onMsg')
 client:setCloseFunc('TestClient.onClose')
 
 clientData.client = client
-safeCall(client.startConnect, client)
---client:startConnect()
+client:startConnect()
 
 Net.Start()

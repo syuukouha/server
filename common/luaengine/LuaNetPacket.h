@@ -63,7 +63,7 @@ public:
           data += _needSize;
           sz -= _needSize;
           readSize += _needSize;
-          _needSize = packetLen();
+          _needSize = packetLen() - kHeadLen;
           _state = eState_ParseData;
           uint8_t mlen = methodLen();
           if (_needSize >= kMaxPacketLen || (_needSize < (mlen+sizeof(uint32_t))
@@ -76,6 +76,7 @@ public:
             _head[needLen+i] = data[i];
           }
           readSize += sz;
+          _needSize -= sz;
           return readSize;
         }
         break;

@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 local function traceBack(errMsg)
     local text = debug.traceback(errMsg, 6)
-    print (text .. " LUA_ERROR")
+    print (text)
     return false
 end
 
