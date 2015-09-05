@@ -1,6 +1,5 @@
-#!/bin/ELua
 --[[
-FileName : execute
+FileName : main.lua
 Author   : rick <rick.han@yahoo.com>
 
 copyright (c) <2015> <rick>
@@ -24,47 +23,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]--
 
-Config = {}
+module('TestClient', package.seeall)
 
-function usage()
-    print [[
-    execute option
+clientData = {}
 
-    execute client  #启动客户端(测试代码)
-    execute gatesvr #启动网关(测试)
-    ]]
-    os.exit()
-end
-
-if Sys.Argc < 3 then
-    usage()
-end
-
-if os.getenv("SCRIPT_ROOT") then
-    lfs.chdir(os.getenv("SCRIPT_ROOT")) 
-end
-
--- 搜索路径设置
-local currDir = lfs.currentdir()
-local path = currDir .. "/?.lua;"
-package.path = path .. package.path
-
-Config.scriptRoot = currDir
-
-function loadDir(dir)
-    package.path = dir .. "/?.lua;" .. package.path
-    for file in lfs.dir(dir) do
-        local pos = string.find(file, "lua")
-        if pos ~= nil then
-            local name = string.sub(file, 0, pos-2)
-            require(name)
-        end
+function onConnected(connected, connId)
+    if connected then
+        print('connected!!')
+        clientData.connId = connId
+    else
+        print('failed to connect')
     end
 end
 
--- 加载通用代码
-loadDir(currDir .. '/common')
+function onMsg(connId, method, data)
+    print ('method:' .. method .. " data:" .. data)
+end
 
-Config.appRoot = currDir .. '/' .. Sys.Argv[2]
-loadDir(Config.appRoot)
+function onClose(connId)
+    if clientData.connId == connId then
+        print('connection lost!!!')
+        clientData.connId = nil
+    end
+end
 
+local client = createTcpClient('127.0.0.1', 8080)
+client:setConnectFunc("TestClient.onConnected")
+client:setMsgFunc('TestClient.onMsg')
+client:setCloseFunc('TestClient.onClose')
+
+clientData.client = client
+safeCall(client.startConnect, client)
+--client:startConnect()
+
+Net.Start()

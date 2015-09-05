@@ -37,21 +37,21 @@ static int luaErrorFunc(lua_State* L)
   }
   stackTrace += "\nstack traceback";
 
-  char buff[513] = {0};
-  int stackLevel = 1;
+  char buff[1024] = {0};
+  int stackLevel = 0;
   while(lua_getstack(L, stackLevel++, &debug)) {
     lua_getinfo(L, "Snl", &debug);
-    snprintf(buff, 512, "\n\t%s", debug.short_src);
+    snprintf(buff, sizeof(buff), "\n\t%s", debug.short_src);
     int buffLen = strlen(buff);
     if (*debug.namewhat != '\0') {
-      snprintf(buff+buffLen, 512-buffLen, " in function \'%s\'", debug.name);
+      snprintf(buff+buffLen, sizeof(buff)-buffLen, " in function \'%s\'", debug.name);
     } else {
       if (*debug.what == 'm') {
-        snprintf(buff+buffLen, 512-buffLen, " in main chunk ");
+        snprintf(buff+buffLen, sizeof(buff)-buffLen, " in main chunk ");
       } else if(*debug.what == 't' || *debug.what == 'C') {
-        snprintf(buff+buffLen, 512-buffLen, " ? ");
+        snprintf(buff+buffLen, sizeof(buff)-buffLen, " ? ");
       } else {
-        snprintf(buff+buffLen, 512-buffLen, " in function <%s:%d>",
+        snprintf(buff+buffLen, sizeof(buff)-buffLen, " in function <%s:%d>",
                  debug.short_src, debug.linedefined);
       }
     }
@@ -92,6 +92,7 @@ void LuaEngine::addSearchPath(const char* path)
 void LuaEngine::loadFile(const char* fileName)
 {
   luaL_dofile(_L, fileName);
+  lua_pushcfunction(_L, luaErrorFunc); // 错误处理函数
   lua_pcall(_L, 0, 0, 0);
 }
 

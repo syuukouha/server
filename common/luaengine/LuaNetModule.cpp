@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "Logger.h"
 #include "LuaNetPacket.h"
 #include <ext/hash_map>
-#define LUANET_META "__lua__net__meta__"
+#define LUANET_META "LuaNetMeta"
 #define LUA_FUNC_NAME_MAX_LEN 200
 
 static int connect(lua_State*);
@@ -75,11 +75,13 @@ void openLuaNetModule()
 {
   LuaEngine& ins = LuaEngine::instance();
   lua_State* L = ins.state();
+
   luaL_newmetatable(L, LUANET_META);
   lua_pushstring(L, "__index");
   lua_pushvalue(L, -2);
   lua_pushvalue(L, -3);
   luaL_register(L, NULL, netMetaFuncs);
+  
   luaL_register(L, "Net", netFuncs);
 }
 
@@ -307,7 +309,7 @@ void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
   ConnIter it = _gConnMaps.find(connId);
   _gConnMaps.erase(it);
   LuaNetData* data = static_cast<LuaNetData*>(conn->getUserData());
-  if (data == nullptr) {
+  if (data == nullptr || data->_closeFunc == 0) {
     return;
   }
   LuaEngine& ins = LuaEngine::instance();
@@ -320,7 +322,7 @@ void handleClose(const ErrorCode& err, const TcpConnPtr& conn)
 void handlePacket(const TcpConnPtr& conn) 
 {
   LuaNetData* luaData = static_cast<LuaNetData*>(conn->getUserData());
-  if (luaData == nullptr) {
+  if (luaData == nullptr || luaData->_msgFunc == 0) {
     return;
   }
   uint64_t connId = conn->getConnId();
@@ -344,7 +346,7 @@ void handlePacket(const TcpConnPtr& conn)
 void handleWrite(const TcpConnPtr& conn, const ErrorCode& err, size_t sz)
 {
   LuaNetData* data = static_cast<LuaNetData*>(conn->getUserData());
-  if (data == nullptr) {
+  if (data == nullptr || data->_writeFunc == 0) {
     return;
   }
   uint64_t connId = conn->getConnId();
@@ -359,7 +361,7 @@ void handleWrite(const TcpConnPtr& conn, const ErrorCode& err, size_t sz)
 void handleConnected(const ErrorCode& err, TcpConnPtr conn)
 {
   LuaNetData* data = static_cast<LuaNetData*>(conn->getUserData());
-  if (data == nullptr || data->_extra == nullptr) {
+  if (data == nullptr || data->_extra == nullptr || data->_connectFunc == 0) {
     return;
   }
 

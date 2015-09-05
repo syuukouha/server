@@ -31,10 +31,11 @@ TcpClient = {
     _connectFunc = nil, -- 字符串格式的回调函数
     _closeFunc   = nil,
     _msgFunc     = nil,
-    _server      = nil,
+    _client      = nil,
 }
 
 function TcpClient:setConnectFunc(func)
+    print ('func called!!!!' .. func)
     self._connectFunc = func
 end
 
@@ -47,12 +48,19 @@ function TcpClient:setMsgFunc(func)
 end
 
 function TcpClient:startConnect()
-    self._client = Net.NewTcpClient(self.ip, self.port)
+    self._client = Net.NewTcpClient(self._ip, self._port)
     if self._client == nil then
-        error('failed to create tcp server')
+        error('failed to create tcp client')
     end
-    
+   
+    local mt = getmetatable(self._client)
+    if mt == nil then
+        error('no metatable found!')
+    end
+    print (self._ip .. " : " .. self._port)
+    print (self._connectFunc)
     if self._connectFunc ~= nil then
+        print ('dfsdf')
         self._client:SetConnectCallback(self._connectFunc)
     end
 
@@ -64,7 +72,7 @@ function TcpClient:startConnect()
         self._client:SetMsgCallback(self._msgFunc)
     end
 
-    self._client:Connect()
+    mt.Connect(self._client)
 end
 
 function TcpClient:close()
@@ -75,10 +83,13 @@ function TcpClient:close()
 end
 
 function createTcpClient(ip, port)
-    local c = class(TcpClient, "TcpClient")
+    local c = class("TcpClient", TcpClient)
     c._ip   = ip
     c._port = port
 
-    return s
+    local t = getmetatable(c)
+    for k,v in pairs(t) do
+        print (tostring(k) .. '=' .. tostring(v))
+    end
+    return c
 end
-

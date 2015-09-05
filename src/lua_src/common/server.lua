@@ -47,7 +47,7 @@ function TcpServer:setMsgFunc(func)
 end
 
 function TcpServer:startListen()
-    self._server = Net.NewTcpServer(self.ip, self.port)
+    self._server = Net.NewTcpServer(self._ip, self._port)
     if self._server == nil then
         error('failed to create tcp server')
     end
@@ -73,7 +73,7 @@ function TcpServer:close()
 end
 
 function createTcpServer(ip, port)
-    local s = class(TcpServer, "TcpServer")
+    local s = class('TcpServer', TcpServer)
     s._ip   = ip
     s._port = port
 
