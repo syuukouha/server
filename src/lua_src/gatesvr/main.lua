@@ -26,6 +26,11 @@ THE SOFTWARE.
 
 serverData = { conn_list = {}, }
 
+function TestFunc(connId, params)
+    -- 目前参数以字符串形式存在
+    print ('receive data====' .. params)
+end
+
 function onConnected(connected, connId)
     if connected then
         print('connected!!')
@@ -34,6 +39,10 @@ function onConnected(connected, connId)
 end
 
 function onMsg(connId, method, data)
+    local func = _G[method]
+    if func then
+        func(connId, data)
+    end
     print ('method:' .. method .. " data:" .. data)
 end
 
